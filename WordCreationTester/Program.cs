@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2013.Excel;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Openize.Words;
 using Openize.Words.IElements;
 using WordCreationTester;
@@ -377,12 +376,17 @@ static void ParseSection(WordFileGenerator w, Section s)
     if (s.SectionContext.Equals("paragraph"))
     {
         parseNormalSection(w, s);
-        
-        foreach (Section subSection in s.Sections)
-        {
-            ParseSection(w, subSection);
-        }
+    } else if (s.SectionContext.Equals("table"))
+    {
+        parseTable(w, s);
     }
+
+    foreach (Section subSection in s.Sections)
+    {
+        ParseSection(w, subSection);
+    }
+
+
 }
 
 static void parseNormalSection(WordFileGenerator w, Section s)
@@ -390,6 +394,24 @@ static void parseNormalSection(WordFileGenerator w, Section s)
     if (s.ParagraphContext.Equals("normal") && s.Content != "")
     {
         w.addParagraph(s.Content);   
+    }
+}
+
+static void parseTable(WordFileGenerator w, Section s)
+{
+    if (s.TableData != null)
+    {
+        w.addTable(s.TableData.RowCount, s.TableData.ColumnCount);
+
+        foreach (Cell c in s.TableData.Cells)
+        {
+            Console.WriteLine(s.TableData.RowCount);
+            Console.WriteLine(s.TableData.ColumnCount);
+            Console.WriteLine(c.Row);
+            Console.WriteLine(c.Column);
+
+            w.addTableCell(c.Content, c.FontWeight, c.Row, c.Column);
+        }
     }
 }
 

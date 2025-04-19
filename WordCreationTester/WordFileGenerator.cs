@@ -3,6 +3,7 @@ using Openize.Words.IElements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -127,15 +128,19 @@ namespace WordCreationTester
             _body.AppendChild(p);
         }
 
-        public void addTable(int rows, int cells)
+        // Whenever this is called a new table is created and added to the document
+        // we then also remember this table so that we can add cells to it
+        // if cells are not added to the table, the table will just be blank.
+        public void addTable(int rows, int columns)
         {
-            var t = new Table();
+            var t = new Table(rows, columns);
             t.Style = _doc.GetElementStyles().TableStyles[1]; // sets solid black borders
             _currentTable = t;
             _body.AppendChild(t);
         }
 
-        public void addTableCell(string text, int rowNum, int colNum)
+        // Bolded are seen as table headings, otherwise it's a normal cell
+        public void addTableCell(string text, string fontWeight, int rowNum, int colNum)
         {
             var row = _currentTable!.Rows[rowNum];
             var cell = row.Cells[colNum];
@@ -143,7 +148,8 @@ namespace WordCreationTester
             var p = new Paragraph();
             p.AddRun(new Run
             {
-                Text = text
+                Text = text,
+                Bold = fontWeight.Equals("bold")
             });
 
             cell.Paragraphs.Add(p);
