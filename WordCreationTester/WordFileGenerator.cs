@@ -97,33 +97,38 @@ namespace WordCreationTester
             _body.AppendChild(p);
         }
 
-        public void addDotpointParagraph(string text, string font = "Normal", int indentLevel = 1)
+        public void addDotpointParagraph(string text, int indentLevel = 1, string font = "Normal")
         {
             var p = new Paragraph();
-            p.IsBullet = true;
-            p.NumberingId = 1; // This just needs to be included, number doesn't matter
-            p.NumberingLevel = indentLevel;
 
             p.AddRun(new Run
             {
                 Text = text,
                 FontFamily = font
             });
+
+            p.Style = "ListParagraph";
+            p.IsBullet = true;
+            p.NumberingId = 1; // This just needs to be included, number doesn't matter
+            p.NumberingLevel = indentLevel;
 
             _body.AppendChild(p);
         }
 
         public void addNumericListParagraph(string text, int number, int indentLevel, string font = "Normal")
         {
+
             var p = new Paragraph();
-            p.IsNumbered = true;
-            p.NumberingId = number;
-            p.NumberingLevel = indentLevel;
             p.AddRun(new Run
             {
                 Text = text,
                 FontFamily = font
             });
+
+            p.Style = "ListParagraph";
+            p.NumberingId = 1;
+            p.IsAlphabeticNumber = true;
+            p.NumberingLevel = indentLevel;
 
             _body.AppendChild(p);
         }

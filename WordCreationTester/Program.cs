@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DocumentFormat.OpenXml.Drawing.Diagrams;
+using Newtonsoft.Json;
 using Openize.Words;
 using Openize.Words.IElements;
 using WordCreationTester;
@@ -265,6 +266,138 @@ string jsonString = @"{
               ]
             },
             {
+              ""sectionTitle"": ""Other Uses"",
+              ""sectionContext"": ""dotpoint"",
+              ""paragraphContext"": ""normal"",
+              ""content"": ""Dandelions have other uses:"",
+              ""sections"": [
+                {
+                  ""sectionTitle"": ""Natural Dye"",
+                  ""sectionContext"": ""dotpoint"",
+                  ""paragraphContext"": ""dotpoint"",
+                  ""content"": ""Dandelions make a natural dye."",
+                  ""sections"": []
+                },
+                {
+                  ""sectionTitle"": ""Rubber Production"",
+                  ""sectionContext"": ""dotpoint"",
+                  ""paragraphContext"": ""dotpoint"",
+                  ""content"": ""Dandelions contain latex for rubber."",
+                  ""sections"": [
+                    {
+                        ""sectionTitle"": ""Natural Dye"",
+                        ""sectionContext"": ""dotpoint"",
+                        ""paragraphContext"": ""dotpoint"",
+                        ""content"": ""Dandelions make a natural dye."",
+                        ""sections"": []
+                    },
+                    {
+                        ""sectionTitle"": ""Rubber Production"",
+                        ""sectionContext"": ""dotpoint"",
+                        ""paragraphContext"": ""dotpoint"",
+                        ""content"": ""Dandelions contain latex for rubber."",
+                        ""sections"": [
+                        {
+                            ""sectionTitle"": ""Natural Dye"",
+                            ""sectionContext"": ""dotpoint"",
+                            ""paragraphContext"": ""dotpoint"",
+                            ""content"": ""Dandelions make a natural dye."",
+                            ""sections"": []
+                        },
+                        {
+                            ""sectionTitle"": ""Rubber Production"",
+                            ""sectionContext"": ""dotpoint"",
+                            ""paragraphContext"": ""dotpoint"",
+                            ""content"": ""Dandelions contain latex for rubber."",
+                            ""sections"": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  ""sectionTitle"": ""Soil Remediation"",
+                  ""sectionContext"": ""dotpoint"",
+                  ""paragraphContext"": ""dotpoint"",
+                  ""content"": ""Dandelions are used for remediation."",
+                  ""sections"": []
+                },
+                {
+                  ""sectionTitle"": ""Animal Feed"",
+                  ""sectionContext"": ""dotpoint"",
+                  ""paragraphContext"": ""dotpoint"",
+                  ""content"": ""Dandelions are used as animal feed."",
+                  ""sections"": []
+                }
+              ]
+            },
+{
+              ""sectionTitle"": ""Other Uses"",
+              ""sectionContext"": ""numberList"",
+              ""paragraphContext"": ""normal"",
+              ""content"": ""Dandelions have other uses:"",
+              ""sections"": [
+                {
+                  ""sectionTitle"": ""Natural Dye"",
+                  ""sectionContext"": ""numberList"",
+                  ""paragraphContext"": ""numberList"",
+                  ""content"": ""Dandelions make a natural dye."",
+                  ""sections"": []
+                },
+                {
+                  ""sectionTitle"": ""Rubber Production"",
+                  ""sectionContext"": ""numberList"",
+                  ""paragraphContext"": ""numberList"",
+                  ""content"": ""Dandelions contain latex for rubber."",
+                  ""sections"": [
+                    {
+                        ""sectionTitle"": ""Natural Dye"",
+                        ""sectionContext"": ""numberList"",
+                        ""paragraphContext"": ""numberList"",
+                        ""content"": ""Dandelions make a natural dye."",
+                        ""sections"": []
+                    },
+                    {
+                        ""sectionTitle"": ""Rubber Production"",
+                        ""sectionContext"": ""numberList"",
+                        ""paragraphContext"": ""numberList"",
+                        ""content"": ""Dandelions contain latex for rubber."",
+                        ""sections"": [
+                        {
+                            ""sectionTitle"": ""Natural Dye"",
+                            ""sectionContext"": ""numberList"",
+                            ""paragraphContext"": ""numberList"",
+                            ""content"": ""Dandelions make a natural dye."",
+                            ""sections"": []
+                        },
+                        {
+                            ""sectionTitle"": ""Rubber Production"",
+                            ""sectionContext"": ""numberList"",
+                            ""paragraphContext"": ""numberList"",
+                            ""content"": ""Dandelions contain latex for rubber."",
+                            ""sections"": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  ""sectionTitle"": ""Soil Remediation"",
+                  ""sectionContext"": ""numberList"",
+                  ""paragraphContext"": ""numberList"",
+                  ""content"": ""Dandelions are used for remediation."",
+                  ""sections"": []
+                },
+                {
+                  ""sectionTitle"": ""Animal Feed"",
+                  ""sectionContext"": ""numberList"",
+                  ""paragraphContext"": ""numberList"",
+                  ""content"": ""Dandelions are used as animal feed."",
+                  ""sections"": []
+                }
+              ]
+            },
+            {
               ""sectionTitle"": ""Challenges and Future Directions"",
               ""sectionContext"": ""paragraph"",
               ""paragraphContext"": ""normal"",
@@ -340,25 +473,6 @@ try
         ParseSection(word, s);
     }
 
-    // Now you can work with the 'report' object and its properties
-    Console.WriteLine("Report Title: " + report.ReportTitle);
-
-    // Example: Accessing the content of the first section
-    Console.WriteLine("First Section Title: " + report.Sections[0].SectionTitle);
-    Console.WriteLine("First Section Content: " + report.Sections[0].Content);
-
-    // Example: Accessing the TableData
-    if (report.Sections[5].Sections[1].TableData != null)
-    {
-        Console.WriteLine("Serving Size: " + report.Sections[5].Sections[1].TableData.Caption);
-
-        // Accessing table cells
-        foreach (var cell in report.Sections[5].Sections[1].TableData.Cells)
-        {
-            Console.WriteLine($"Cell Content: {cell.Content}, Row: {cell.Row}, Column: {cell.Column}, FontWeight: {cell.FontWeight}");
-        }
-    }
-
     doc.Save($"{docsDirectory}/{filename}");
 }
 catch (System.Exception ex)
@@ -379,13 +493,18 @@ static void ParseSection(WordFileGenerator w, Section s)
     } else if (s.SectionContext.Equals("table"))
     {
         parseTable(w, s);
+    } else if (s.SectionContext.Equals("dotpoint"))
+    {
+        parseDotPoints(w, s);
+    } else if (s.SectionContext.Equals("numberList"))
+    {
+        parseNumberList(w, s);
     }
 
     foreach (Section subSection in s.Sections)
     {
         ParseSection(w, subSection);
     }
-
 
 }
 
@@ -405,13 +524,48 @@ static void parseTable(WordFileGenerator w, Section s)
 
         foreach (Cell c in s.TableData.Cells)
         {
-            Console.WriteLine(s.TableData.RowCount);
-            Console.WriteLine(s.TableData.ColumnCount);
-            Console.WriteLine(c.Row);
-            Console.WriteLine(c.Column);
 
             w.addTableCell(c.Content, c.FontWeight, c.Row, c.Column);
         }
+
+        if (!s.TableData.Caption.Equals(""))
+        {
+            w.addParagraph(s.TableData.Caption);
+        }
+    }
+}
+
+static void parseDotPoints(WordFileGenerator w, Section s, int indent = 1)
+{
+    if (s.ParagraphContext.Equals("paragraph"))
+    {
+        w.addParagraph(s.Content);
+    } else if (s.ParagraphContext.Equals("dotpoint"))
+    {
+        w.addDotpointParagraph(s.Content, indent);
+    }
+
+    foreach (Section subSection in s.Sections)
+    {
+        parseDotPoints(w, subSection, indent + 1);
+    }
+}
+
+static void parseNumberList(WordFileGenerator w, Section s, int indent = 1, int number = 1)
+{
+    if (s.ParagraphContext.Equals("paragraph"))
+    {
+        w.addParagraph(s.Content);
+    } else if (s.ParagraphContext.Equals("numberList"))
+    {
+        w.addNumericListParagraph(s.Content, number, indent);
+    }
+
+    int subNumber = 1;
+
+    foreach (Section subSection in s.Sections)
+    {
+        parseNumberList(w, subSection, indent + 1, subNumber++);
     }
 }
 
