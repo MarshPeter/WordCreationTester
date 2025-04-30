@@ -1,11 +1,5 @@
 ﻿using Openize.Words;
 using Openize.Words.IElements;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WordCreationTester
 {
@@ -14,11 +8,13 @@ namespace WordCreationTester
         private Document _doc;
         private Body _body;
         private Table? _currentTable;
+        private bool _currentSectionAlreadyHasRun;
 
         public WordFileGenerator(Document doc)
         {
             _doc = doc;
             _body = new Body(doc);
+            _currentSectionAlreadyHasRun = false;
         }
 
         public void addTitle(string text)
@@ -40,13 +36,15 @@ namespace WordCreationTester
             addHeader(text, 1);
         }
 
-        public void addHeader(string text, int headingLevel)
+        public void addHeader(string text, int headingLevel, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
             p.AddRun(new Run
             {
-                Text = text
+                Text = text,
+                FontFamily = font,
+                Color = "Black"
             });
 
             switch (headingLevel)
@@ -83,21 +81,32 @@ namespace WordCreationTester
             }
 
             _body.AppendChild(p);
+            _currentSectionAlreadyHasRun = false;
         }
 
-        public void addParagraph(string text, string font = "Normal")
+        public void addParagraph(string text, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
+            // This will add spaces between sentences in sections.
+            if (_currentSectionAlreadyHasRun)
+            {
+                text = " " + text;
+            }
+
+            _currentSectionAlreadyHasRun = true;
+
             p.AddRun(new Run { 
                 Text = text,
-                FontFamily = font 
+                FontFamily = font,
             });
+
+            p.Alignment = ParagraphAlignment.Justify;
 
             _body.AppendChild(p);
         }
 
-        public void addDotpointParagraph(string text, int indentLevel = 1, string font = "Normal")
+        public void addDotpointParagraph(string text, int indentLevel = 1, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
@@ -115,7 +124,9 @@ namespace WordCreationTester
             _body.AppendChild(p);
         }
 
-        public void addNumericListParagraph(string text, int number, int indentLevel, string font = "Normal")
+
+        // This is likely to not be used, can maybe be removed in final implementation
+        public void addNumericListParagraph(string text, int number, int indentLevel, string font = "Times New Roman")
         {
 
             var p = new Paragraph();
@@ -145,7 +156,7 @@ namespace WordCreationTester
         }
 
         // Bolded are seen as table headings, otherwise it's a normal cell
-        public void addTableCell(string text, string fontWeight, int rowNum, int colNum)
+        public void addTableCell(string text, string fontWeight, int rowNum, int colNum, string font = "Times New Roman")
         {
             var row = _currentTable!.Rows[rowNum];
             var cell = row.Cells[colNum];
@@ -154,8 +165,11 @@ namespace WordCreationTester
             p.AddRun(new Run
             {
                 Text = text,
-                Bold = fontWeight.Equals("bold")
+                Bold = fontWeight.Equals("bold"),
+                FontFamily = font
             });
+
+            p.Alignment = ParagraphAlignment.Center;
 
             cell.Paragraphs.Add(p);
         }
