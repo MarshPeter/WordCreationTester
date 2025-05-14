@@ -2,18 +2,15 @@
 using Azure.Core;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
-using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.Search;
 using Azure.ResourceManager.Search.Models;
 using Azure;
-using Azure.Core.Diagnostics;
-using System.Diagnostics.Tracing;
 
 namespace WordCreationTester
 {
     public static class AIServiceCreator
     {
-        public static async Task createSearchResource()
+        public static async Task createSearchResource(string resourceGroupName, string searchServiceName)
         {
 
             // If the resource group doesn't exist, you can create it:
@@ -30,7 +27,6 @@ namespace WordCreationTester
 
 
             // if the resource group does exist, do the following:
-            string resourceGroupName = "swin-testing";
             try
             {
                 ArmClient client = new ArmClient(new DefaultAzureCredential());
@@ -38,8 +34,6 @@ namespace WordCreationTester
                 SubscriptionResource subscription = await client.GetDefaultSubscriptionAsync();
                 ResourceGroupCollection resourceGroups = subscription.GetResourceGroups();
                 ResourceGroupResource resourceGroup = await resourceGroups.GetAsync(resourceGroupName);
-
-                string searchServiceName = "swin-testing-ai-programmatic";
 
                 // Azure Locations: https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet
                 SearchServiceData searchServiceData = new SearchServiceData(AzureLocation.EastUS2)
@@ -65,8 +59,58 @@ namespace WordCreationTester
             {
                 Console.WriteLine($"An Error Occurred: {ex.Message}");
             }
+        }
 
+        public static async Task DeleteSearchService(
+            string resourceGroupName,
+            string searchServiceName)
+        {
+            try
+            {
+                Console.WriteLine("Test");
+                ArmClient client = new ArmClient(new DefaultAzureCredential());
+                // get default subscription
+                SubscriptionResource subscription =
+                  await client.GetDefaultSubscriptionAsync();
+                // get the resource group
+                ResourceGroupResource resourceGroup =
+                  await subscription
+                    .GetResourceGroups()
+                    .GetAsync(resourceGroupName);
 
+                SearchServiceCollection searchServices =
+                  resourceGroup.GetSearchServices();
+
+                // first check if it exists
+                bool exists =
+                  await searchServices.ExistsAsync(searchServiceName);
+                if (!exists)
+                {
+                    Console.WriteLine(
+                      $"Search service '{searchServiceName}' not found in RG '{resourceGroupName}'.");
+                    return;
+                }
+
+                Console.WriteLine(
+                  $"Deleting search service '{searchServiceName}' in RG '{resourceGroupName}'...");
+                // fetch the specific service resource
+                SearchServiceResource svc =
+                  await searchServices.GetAsync(searchServiceName);
+                // delete and wait until completion
+                await svc.DeleteAsync(Azure.WaitUntil.Completed);
+
+                Console.WriteLine(
+                  $"Successfully deleted search service '{searchServiceName}'.");
+            }
+            catch (RequestFailedException rfe)
+            {
+                Console.WriteLine(
+                  $"Azure request failed (status {rfe.Status}): {rfe.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex}");
+            }
         }
     }
 }

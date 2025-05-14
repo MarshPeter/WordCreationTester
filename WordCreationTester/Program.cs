@@ -8,4 +8,7 @@
 // AIRunner.runAI();
 
 // Uncomment this to work with the AIService Creator
-await AIServiceCreator.createSearchResource();
+// await AIServiceCreator.createSearchResource("swin-testing", "swin-testing-ai-programmatic");
+
+// Uncomment this to work with the AIService Destroyer
+await AIServiceCreator.DeleteSearchService("swin-testing", "swin-testing-ai-programmatic");
