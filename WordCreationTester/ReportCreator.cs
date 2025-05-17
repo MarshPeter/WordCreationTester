@@ -13,15 +13,13 @@ namespace WordCreationTester
             try
             {
                 // Deserialize the JSON string into a Report object
-                Report report = JsonConvert.DeserializeObject<Report>(jsonString);
+                List<ReportSegment> report = JsonConvert.DeserializeObject<List<ReportSegment>>(jsonString);
 
                 var doc = new Document();
 
                 var word = new WordFileGenerator(doc);
 
-                word.addTitle(report.ReportTitle);
-
-                foreach (Section s in report.Sections)
+                foreach (ReportSegment s in report)
                 {
                     ParseSection(word, s);
                 }
@@ -33,99 +31,67 @@ namespace WordCreationTester
                 throw new FileFormatException("An error occurred.", ex);
             }
 
-            static void ParseSection(WordFileGenerator w, Section s)
-            {
-                if (s.SectionTitle != "")
-                {
-                    w.addHeader(s.SectionTitle);
-                }
-
-                if (s.SectionContext.Equals("paragraph"))
-                {
-                    parseNormalSection(w, s);
-                }
-                else if (s.SectionContext.Equals("table"))
-                {
-                    parseTable(w, s);
-                }
-                else if (s.SectionContext.Equals("dotpoint"))
-                {
-                    parseDotPoints(w, s);
-                }
-                else if (s.SectionContext.Equals("numberList"))
-                {
-                    parseNumberList(w, s);
-                }
-
-                foreach (Section subSection in s.Sections)
-                {
-                    ParseSection(w, subSection);
-                }
-
-            }
-
         }
-
-        private static void parseNormalSection(WordFileGenerator w, Section s)
+        static void ParseSection(WordFileGenerator w, ReportSegment s)
         {
-            if (s.ParagraphContext.Equals("normal") && s.Content != "")
+
+            if (s.Type.Equals("title"))
             {
-                w.addParagraph(s.Content);
+                if (s.Text == null || s.Text.Equals("")) return;
+
+                w.addTitle(s.Text);
             }
-        }
 
-        private static void parseTable(WordFileGenerator w, Section s)
-        {
-            if (s.TableData != null)
+            if (s.Type.Equals("header"))
             {
-                w.addTable(s.TableData.RowCount, s.TableData.ColumnCount);
+                if (s.Text == null || s.Text.Equals("")) return;
 
-                foreach (Cell c in s.TableData.Cells)
+                w.addHeader(s.Text);
+            }
+
+            if (s.Type.Equals("paragraph"))
+            {
+                if (s.Text == null || s.Text.Equals("")) return;
+
+                w.addParagraph(s.Text);
+            }
+
+            if (s.Type.Equals("list"))
+            {
+                if (s.Items == null || s.Items.Count == 0) return;
+
+                foreach (string point in s.Items)
                 {
+                    w.addDotpointParagraph(point);
+                }
+            }
 
-                    w.addTableCell(c.Content, c.FontWeight, c.Row, c.Column);
+            if (s.Type.Equals("table"))
+            {
+                int nonHeaderCells  = 0;
+                if (s.Columns == null || s.Columns.Count == 0 ||
+                    s.Rows == null || s.Rows.Count == 0)
+                {
+                    return;
                 }
 
-                if (!s.TableData.Caption.Equals(""))
+                w.addTable(s.Columns.Count(), s.Columns.Count * s.Rows.Count);
+
+                for (int i = 0; i < s.Columns.Count(); i++)
                 {
-                    w.addParagraph(s.TableData.Caption);
+                    w.addTableCell(s.Columns[i], fontWeight: "bold", 0, i);
+
                 }
-            }
-        }
-        private static void parseDotPoints(WordFileGenerator w, Section s, int indent = 1)
-        {
-            if (s.ParagraphContext.Equals("paragraph"))
-            {
-                w.addParagraph(s.Content);
-            }
-            else if (s.ParagraphContext.Equals("dotpoint"))
-            {
-                w.addDotpointParagraph(s.Content, indent);
+
+                for (int i = 0; i < s.Rows.Count; i++)
+                {
+                    for (int j = 0; j < s.Rows[i].Count; j++)
+                    {
+                        w.addTableCell(s.Rows[i][j], "normal", i, j);
+                    }
+                }
+
             }
 
-            foreach (Section subSection in s.Sections)
-            {
-                parseDotPoints(w, subSection, indent + 1);
-            }
-        }
-
-        private static void parseNumberList(WordFileGenerator w, Section s, int indent = 1, int number = 1)
-        {
-            if (s.ParagraphContext.Equals("paragraph"))
-            {
-                w.addParagraph(s.Content);
-            }
-            else if (s.ParagraphContext.Equals("numberList"))
-            {
-                w.addNumericListParagraph(s.Content, number, indent);
-            }
-
-            int subNumber = 1;
-
-            foreach (Section subSection in s.Sections)
-            {
-                parseNumberList(w, subSection, indent + 1, subNumber++);
-            }
-        }
     }
 }
