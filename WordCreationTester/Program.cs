@@ -20,6 +20,8 @@ using System.IdentityModel.Tokens.Jwt;
 // await IndexCreator.CreateSearchResourcesAsync();
 
 
+
+// THE FOLLOWING CODE IS FOR INDEXING
 string searchServiceName = "swintesting-ai";
 string dataSourceName = "my-datasource";
 string skillsetName = "my-skillset";
