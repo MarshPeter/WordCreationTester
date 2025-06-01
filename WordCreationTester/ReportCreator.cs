@@ -68,7 +68,7 @@ namespace WordCreationTester
 
             if (s.Type.Equals("table"))
             {
-                int nonHeaderCells  = 0;
+                int nonHeaderCells = 0;
                 if (s.Columns == null || s.Columns.Count == 0 ||
                     s.Rows == null || s.Rows.Count == 0)
                 {
@@ -93,5 +93,6 @@ namespace WordCreationTester
 
             }
 
+        }
     }
 }
