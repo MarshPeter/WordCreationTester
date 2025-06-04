@@ -5,11 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Azure.Identity;
 using Azure.Core;
-using DocumentFormat.OpenXml.Drawing;
 
 public static class AzureSearchDataSourceCreator
 {
-    public static async Task CreateDataSourceAsync(
+    public static async Task<bool> CreateDataSourceAsync(
         string searchServiceName,
         string dataSourcePayload)
     {
@@ -37,16 +36,19 @@ public static class AzureSearchDataSourceCreator
         if (response.IsSuccessStatusCode)
         {
             Console.WriteLine("Data source created successfully.");
+            return true;
         }
         else
         {
             string error = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Failed to create data source: {response.Content}");
             Console.WriteLine(error);
+
+            return false;
         }
     }
 
-    public static async Task CreateSkillsetAsync(
+    public static async Task<bool> CreateSkillsetAsync(
     string searchServiceName,
     string skillsetName,
     string openAIEndpoint,
@@ -139,26 +141,34 @@ public static class AzureSearchDataSourceCreator
 }}
 ";
 
-        Console.WriteLine("TEST");
         using var client = await AzureSearchHttpClientFactory.CreateAsync();
         var content = new StringContent(skillsetPayload, Encoding.UTF8, "application/json");
-        Console.WriteLine("TEST");
 
         var response = await client.PutAsync(endpoint, content);
 
         if (response.IsSuccessStatusCode)
+        {
             Console.WriteLine("Skillset created successfully.");
+            return true;
+        }
         else
+        {
             Console.WriteLine($"Skillset creation failed: {await response.Content.ReadAsStringAsync()}");
+            return false;
+        }
     }
 
-    public static async Task CreateIndexAsync(
+    public static async Task<bool> CreateIndexAsync(
     string searchServiceName,
     string indexName,
     string openAIEndpoint,
     string openAIKey)
     {
         string endpoint = $"https://{searchServiceName}.search.windows.net/indexes/{indexName}?api-version=2024-07-01";
+        var algorithmName = $"{indexName}-index-algorithm";
+        var profileName = $"{indexName}-azureOpenAi-text-profile";
+        var vectorizerName = $"{indexName}-azureOpenAi-text-vectorizer";
+        var semanticName = $"{indexName}-semantic-configuration";
         // Some of this will need to be updated to be more general eventually. It has a bit too much hard coding atm. 
         string indexPayload = $@"
 {{
@@ -224,7 +234,7 @@ public static class AzureSearchDataSourceCreator
           ""facetable"": false,
           ""key"": false,
           ""dimensions"": 1536,
-          ""vectorSearchProfile"": ""document-assurance-view-index-azureOpenAi-text-profile"",
+          ""vectorSearchProfile"": ""{profileName}"",
           ""synonymMaps"": []
         }}
       ],
@@ -235,10 +245,10 @@ public static class AzureSearchDataSourceCreator
     ""@odata.type"": ""#Microsoft.Azure.Search.BM25Similarity""
   }},
   ""semantic"": {{
-    ""defaultConfiguration"": ""document-assurance-view-index-semantic-configuration"",
+    ""defaultConfiguration"": ""{semanticName}"",
     ""configurations"": [
       {{
-        ""name"": ""document-assurance-view-index-semantic-configuration"",
+        ""name"": ""{semanticName}"",
         ""prioritizedFields"": {{
           ""titleField"": {{
             ""fieldName"": ""title""
@@ -256,7 +266,7 @@ public static class AzureSearchDataSourceCreator
   ""vectorSearch"": {{
     ""algorithms"": [
       {{
-        ""name"": ""document-assurance-view-index-algorithm"",
+        ""name"": ""{algorithmName}"",
         ""kind"": ""hnsw"",
         ""hnswParameters"": {{
           ""metric"": ""cosine"",
@@ -268,14 +278,14 @@ public static class AzureSearchDataSourceCreator
     ],
     ""profiles"": [
       {{
-        ""name"": ""document-assurance-view-index-azureOpenAi-text-profile"",
-        ""algorithm"": ""document-assurance-view-index-algorithm"",
-        ""vectorizer"": ""document-assurance-view-index-azureOpenAi-text-vectorizer""
+        ""name"": ""{profileName}"",
+        ""algorithm"": ""{algorithmName}"",
+        ""vectorizer"": ""{vectorizerName}""
       }}
     ],
     ""vectorizers"": [
       {{
-        ""name"": ""document-assurance-view-index-azureOpenAi-text-vectorizer"",
+        ""name"": ""{vectorizerName}"",
         ""kind"": ""azureOpenAI"",
         ""azureOpenAIParameters"": {{
           ""resourceUri"": ""{openAIEndpoint}"",
@@ -289,20 +299,24 @@ public static class AzureSearchDataSourceCreator
   }}
 }}
 ";
-        Console.WriteLine(indexPayload);
-
         using var client = await AzureSearchHttpClientFactory.CreateAsync();
         var content = new StringContent(indexPayload, Encoding.UTF8, "application/json");
         var response = await client.PutAsync(endpoint, content);
 
         if (response.IsSuccessStatusCode)
+        {
             Console.WriteLine("Index created successfully.");
+            return true;
+        }
         else
+        {
             Console.WriteLine($"Index creation failed: {await response.Content.ReadAsStringAsync()}");
+            return false;
+        }
     }
 
 
-    public static async Task CreateIndexerAsync(
+    public static async Task<bool> CreateIndexerAsync(
         string searchServiceName,
         string indexerName,
         string dataSourceName,
@@ -346,9 +360,15 @@ public static class AzureSearchDataSourceCreator
         var response = await client.PutAsync(endpoint, content);
 
         if (response.IsSuccessStatusCode)
+        {
             Console.WriteLine("Indexer created successfully.");
+            return true;
+        }
         else
+        {
             Console.WriteLine($"Indexer creation failed: {await response.Content.ReadAsStringAsync()}");
+            return false;
+        }
     }
 
 }
