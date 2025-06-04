@@ -41,6 +41,10 @@ namespace WordCreationTester
                     SkuName = SearchSkuName.Basic,
                     ReplicaCount = 1,
                     PartitionCount = 1,
+                    AuthOptions = new SearchAadAuthDataPlaneAuthOptions()
+                    {
+                        AadAuthFailureMode = SearchAadAuthFailureMode.Http403
+                    }
                 };
 
                 SearchServiceCollection searchServices = resourceGroup.GetSearchServices();
@@ -67,7 +71,6 @@ namespace WordCreationTester
         {
             try
             {
-                Console.WriteLine("Test");
                 ArmClient client = new ArmClient(new DefaultAzureCredential());
                 // get default subscription
                 SubscriptionResource subscription =
