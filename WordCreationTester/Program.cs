@@ -88,7 +88,7 @@ class Program
         ReportCreator.runGeneration(result);
 
         // Upload to Azure Blob Storage
-        string filePath = "./docs/Generated.docx";
+        string filePath = $"{docsDirectory}/Generated.docx";
         string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
 
         try

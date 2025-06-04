@@ -26,7 +26,7 @@ namespace WordCreationTester
             await blobClient.UploadAsync(uploadFileStream, overwrite: true);
             uploadFileStream.Close();
 
-            Console.WriteLine($"✅ Uploaded '{blobName}' to Azure Blob Storage.");
+            Console.WriteLine($"Uploaded '{blobName}' to Azure Blob Storage.");
         }
     }
 }
