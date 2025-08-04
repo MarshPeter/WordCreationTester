@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /WordCreationTester/Properties/launchSettings.json
 /AIService/Properties/launchSettings.json
+/AIServiceDestroyer/Properties/launchSettings.json
