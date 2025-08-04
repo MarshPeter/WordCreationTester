@@ -3,11 +3,12 @@
 using WordCreationTester;
 using Azure.Core;
 
-string searchServiceName = "swintesting-ai-programmatic20";
+string searchServiceName = "swintesting-ai-programmatic-showcase";
 string dataSourceName = "my-datasource";
 string skillsetName = "my-skillset";
 string indexName = "my-index";
 string indexerName = "my-indexer";
+string resourceGroup = "TMRRadzen";
 string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
 string containerName = "documents";
 string openAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
@@ -15,12 +16,9 @@ string openAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
 //Uncomment this to work with the AIService Creator
 
-await AIServiceCreator.createSearchResource("swin-testing", searchServiceName);
+await AIServiceCreator.createSearchResource(resourceGroup, searchServiceName);
 
-System.Threading.Thread.Sleep(60000);
-
-//Uncomment this to work with the AIService Destroyer
-// await AIServiceCreator.DeleteSearchService("swin-testing", searchServiceName);
+System.Threading.Thread.Sleep(120000);
 
 //await IndexCreator.CreateSearchResourcesAsync();
 
