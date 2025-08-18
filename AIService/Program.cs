@@ -16,9 +16,9 @@ string openAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
 //Uncomment this to work with the AIService Creator
 
-await AIServiceCreator.createSearchResource(resourceGroup, searchServiceName);
+// await AIServiceCreator.createSearchResource(resourceGroup, searchServiceName);
 
-System.Threading.Thread.Sleep(120000);
+// System.Threading.Thread.Sleep(120000);
 
 //await IndexCreator.CreateSearchResourcesAsync();
 

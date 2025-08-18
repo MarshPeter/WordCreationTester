@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
+using Azure.Core;
+using Azure.Identity;
 using Azure.Search.Documents.Indexes.Models;
 using OpenAI.Chat;
 
@@ -17,7 +19,11 @@ namespace WordCreationTester
             string AI_key = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "<your-key>";
             string searchEndpoint = Environment.GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
             string searchKey = Environment.GetEnvironmentVariable("AZURE_SEARCH_API_KEY") ?? "<your-search-api-key>";
-            var searchIndex = "document-assurance-view-index";
+            var searchIndex = "my-index";
+            
+            Console.WriteLine(searchEndpoint);
+            Console.WriteLine(searchKey);
+
 
             try
             {
@@ -76,13 +82,14 @@ namespace WordCreationTester
 #pragma warning disable AOAI001 // Suppress the diagnostic warning
         private static AzureSearchChatDataSource retrieveDataSource(string searchEndpoint, string searchKey, string searchIndex)
         {
+            // var credential = new DefaultAzureCredential();
             return new AzureSearchChatDataSource()
             {
                 Endpoint = new Uri(searchEndpoint),
                 Authentication = DataSourceAuthentication.FromApiKey(searchKey),
                 IndexName = searchIndex,
                 QueryType = DataSourceQueryType.VectorSemanticHybrid,
-                SemanticConfiguration = "document-assurance-view-index-semantic-configuration",
+                SemanticConfiguration = "my-index-semantic-configuration",
                 VectorizationSource = DataSourceVectorizer.FromDeploymentName("text-embedding-ada-002"),
                 AllowPartialResults = true,
             };
