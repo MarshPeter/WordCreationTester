@@ -50,10 +50,6 @@
         "description": "Partitions allow for scaling of document count as well as faster indexing by sharding your index over multiple search units."
       }
     },
-    "tenant_id": {
-      "type": "string",
-      "minLength": 10
-    },
     "hostingMode": {
       "type": "string",
       "defaultValue": "default",
@@ -74,7 +70,7 @@
     }
   },
   "variables": {
-    "aiSearchServiceNameFull":  "[concat(parameters('aiSearchServiceName'), '-', parameters('tenant_id'))]"
+    "aiSearchServiceNameFull":  "[concat(parameters('aiSearchServiceName'), '-', subscription().tenantId)]"
   },
   "resources": [
     {
