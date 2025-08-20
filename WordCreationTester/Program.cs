@@ -75,6 +75,36 @@ class Program
         Console.WriteLine("Structured JSON:");
         Console.WriteLine(result);
 
+        // Test payload input
+        var payload = new AIReportRequestPayload
+        {
+            TenantId = Guid.NewGuid(),
+            AIRequestId = Guid.NewGuid(),
+            CreatedBy = "test.user@example.com",
+            DateFrom = DateTime.UtcNow.AddDays(-7),
+            DateTo = DateTime.UtcNow,
+            Parameters = new ReportParameters
+            {
+                ReportType = "Summary",
+                Filters = new ReportFilters
+                {
+                    Categories = new List<string> { "Medication Safety" } // example
+                }
+            },
+            ReportStatements = new List<ReportStatement>
+            {
+                new ReportStatement { StatementId = "1", Text = "Show me a summary of all comments made about medication safety."  }
+            },
+            IncludeAttachment = false,
+            AttachmentId = null,
+            AttachmentUrl = null,
+            IndexType = "Assurance",
+            PayloadVersion = "1.0"
+        };
+
+        // Run payload processor
+        await PayloadProcessor.ProcessPayloadAsync(payload);
+
 
         // Ensure the docs directory exists
         string docsDirectory = "./docs";
@@ -86,6 +116,7 @@ class Program
 
         // Generate the Word document
         ReportCreator.runGeneration(result);
+      
 
         // Upload to Azure Blob Storage
         string filePath = $"{docsDirectory}/Generated.docx";
