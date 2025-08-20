@@ -22,25 +22,26 @@ namespace WordCreationTester
                 WriteIndented = true
             };
 
-            // --- Upload payload to Blob Storage ---
-            string connectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
-            string containerName = "payloads";
+            // --- Save payload to Database ---
+            using (var dbContext = new PayloadDbConnection())
+            {
+                string jsonPayload = JsonSerializer.Serialize(payload, jsonOptions);
 
-            var blobServiceClient = new BlobServiceClient(connectionString);
-            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-            await containerClient.CreateIfNotExistsAsync();
+                var entity = new AIReportRequestEntity
+                {
+                    AIRequestId = payload.AIRequestId,
+                    TenantId = payload.TenantId,
+                    CreatedBy = payload.CreatedBy,
+                    ParametersJson = jsonPayload,
+                    Status = "Pending",
+                    CreatedAt = DateTime.Now
+                };
 
-            string blobName = $"payload_{payload.AIRequestId}.json";
-            BlobClient blobClient = containerClient.GetBlobClient(blobName);
+                dbContext.AIReportRequests.Add(entity);
+                await dbContext.SaveChangesAsync();
 
-            string jsonPayload = JsonSerializer.Serialize(payload, jsonOptions);
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(jsonPayload));
-            await blobClient.UploadAsync(ms, overwrite: true);
-
-            Console.WriteLine($"Payload saved to blob: {blobClient.Uri}");
-
-            // Optional: set AttachmentUrl to blob URI
-            payload.AttachmentUrl = blobClient.Uri;
+                Console.WriteLine($"Payload saved to database with AIRequestId: {payload.AIRequestId}");
+            }
 
             // --- Send minimal Service Bus message ---
             var minimalMessage = new ServiceBusRequestMessage
