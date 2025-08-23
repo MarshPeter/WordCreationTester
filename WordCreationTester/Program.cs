@@ -3,6 +3,7 @@ using WordCreationTester;
 using Azure.Core;
 using System.IdentityModel.Tokens.Jwt;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 class Program
@@ -75,7 +76,6 @@ class Program
         Console.WriteLine("Structured JSON:");
         Console.WriteLine(result);
 
-
         // Ensure the docs directory exists
         string docsDirectory = "./docs";
         if (!Directory.Exists(docsDirectory))
@@ -83,21 +83,38 @@ class Program
             Directory.CreateDirectory(docsDirectory);
         }
 
+        // Generate a single timestamp to use for both files
+        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
         // Generate the Word document
         ReportCreator.runGeneration(result);
 
-        // Upload to Azure Blob Storage
-        string filePath = $"{docsDirectory}/Generated.docx";
-        string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
+        // Upload Word file
+        string wordFilePath = $"{docsDirectory}/Generated.docx";
+        string wordBlobName = $"Generated_{timestamp}.docx";
 
         try
         {
-            await AzureUploader.UploadReportAsync(filePath, blobName);
+            await AzureUploader.UploadReportAsync(wordFilePath, wordBlobName);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Upload failed: {ex.Message}");
+        }
+
+        // Export and upload CSV with same timestamp
+        try
+        {
+            //string csvPath = await CsvReportExporter.ExportAssuranceCsvToKnownTempPathAsync(timestamp);
+            string csvPath = await CsvReportExporterEfLinq.ExportAssuranceCsvLinqAsync(timestamp);
+            string csvBlobName = Path.GetFileName(csvPath);
+            await AzureUploader.UploadReportAsync(csvPath, csvBlobName);
+            File.Delete(csvPath);
+            Console.WriteLine("CSV file uploaded and cleaned up.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CSV upload failed: {ex.Message}");
         }
     }
 }
