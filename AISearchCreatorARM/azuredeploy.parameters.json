@@ -3,23 +3,13 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "aiSearchServiceName": {
-      "value": "#ai_search_name#"
+      "value": "#{ai_search_name}#"
     },
-    
     "sku": {
-        "value": "#sku_level#"
+      "value": "#{sku_level}#"
     },
-    "replicaCount": {
-        "value": "#replica_count#"
-    },
-    "partitionCount": {
-        "value": "#partition_count#"
-    },
-    "hostingMode": {
-        "value": "default"
-    },
-    "location": {
-        "value": "#resource_location#" 
+    "tenantId": {
+      "value": "#{tenant_id}#"
     }
   }
 }

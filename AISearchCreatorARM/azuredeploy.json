@@ -6,6 +6,7 @@
       "type": "string",
       "maxLength": 60,
       "minLength": 2,
+      "defaultValue": "AI-Search-Service-Report-Generation",
       "metadata": {
         "description": "Service name must only contain lowercase letters, digits or dashes, cannot use dash as the first two or last one characters, cannot contain consecutive dashes, and is limited between 2 and 60 characters in length."
       }
@@ -26,40 +27,9 @@
         "storage_optimized_l2"
       ]
     },
-    "replicaCount": {
-      "type": "int",
-      "defaultValue": 1,
-      "maxValue": 12,
-      "minValue": 1,
-      "metadata": {
-        "description": "Replicas distribute search workloads across the service. You need at least two replicas to support high availability of query workloads (not applicable to the free tier)."
-      }
-    },
-    "partitionCount": {
-      "type": "int",
-      "defaultValue": 1,
-      "allowedValues": [
-        1,
-        2,
-        3,
-        4,
-        6,
-        12
-      ],
-      "metadata": {
-        "description": "Partitions allow for scaling of document count as well as faster indexing by sharding your index over multiple search units."
-      }
-    },
-    "hostingMode": {
+    "tenantId": {
       "type": "string",
-      "defaultValue": "default",
-      "allowedValues": [
-        "default",
-        "highDensity"
-      ],
-      "metadata": {
-        "description": "Applicable only for SKUs set to standard3. You can set this property to enable a single, high density partition that allows up to 1000 indexes, which is much higher than the maximum indexes allowed for any other SKU."
-      }
+      "minLength": 10
     },
     "location": {
       "type": "string",
@@ -70,7 +40,7 @@
     }
   },
   "variables": {
-    "aiSearchServiceNameFull":  "[concat(parameters('aiSearchServiceName'), '-', subscription().tenantId)]"
+    "aiSearchServiceNameFull": "[concat(parameters('aiSearchServiceName'), '-', parameters('tenantId'))]"
   },
   "resources": [
     {
@@ -82,10 +52,10 @@
         "name": "[parameters('sku')]"
       },
       "properties": {
-        "replicaCount": "[parameters('replicaCount')]",
-        "partitionCount": "[parameters('partitionCount')]",
-        "endpoint": "[concat('https://', parameters('aiSearchServiceName'), '.search.windows.net')]",
-        "hostingMode": "[parameters('hostingMode')]",
+        "replicaCount": 1,
+        "partitionCount": 1,
+        "endpoint": "[concat('https://', variables('aiSearchServiceNameFull'), '.search.windows.net')]",
+        "hostingMode": "default",
         "computeType": "Default",
         "publicNetworkAccess": "Enabled",
         "networkRuleSet": {
@@ -102,7 +72,7 @@
           }
         },
         "dataExfiltrationProtections": [],
-        "semanticSearch": "enabled"
+        "semanticSearch": "standard"
       }
     }
   ]
