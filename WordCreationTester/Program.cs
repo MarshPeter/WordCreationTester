@@ -102,19 +102,5 @@ class Program
             Console.WriteLine($"Upload failed: {ex.Message}");
         }
 
-        // Export and upload CSV with same timestamp
-        try
-        {
-            //string csvPath = await CsvReportExporter.ExportAssuranceCsvToKnownTempPathAsync(timestamp);
-            string csvPath = await CsvReportExporterEfLinq.ExportAssuranceCsvLinqAsync(timestamp);
-            string csvBlobName = Path.GetFileName(csvPath);
-            await AzureUploader.UploadReportAsync(csvPath, csvBlobName);
-            File.Delete(csvPath);
-            Console.WriteLine("CSV file uploaded and cleaned up.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"CSV upload failed: {ex.Message}");
-        }
     }
 }
