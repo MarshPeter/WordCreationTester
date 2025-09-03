@@ -16,7 +16,6 @@ namespace WordCreationTester
         public string AttachmentId { get; set; }
         public Uri AttachmentUrl { get; set; }
         public string IndexType { get; set; }
-        public string PayloadVersion { get; set; }
     }
 
     public class ReportParameters

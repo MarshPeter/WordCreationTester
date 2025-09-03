@@ -24,8 +24,8 @@ class Program
             TenantId = Guid.NewGuid(),
             AIRequestId = Guid.NewGuid(),
             CreatedBy = "test.user@example.com",
-            DateFrom = DateTime.UtcNow.AddDays(-7),
-            DateTo = DateTime.UtcNow,
+            DateFrom =  new DateTime(2020, 01, 01),
+            DateTo = DateTime.UtcNow.Date,
             Parameters = new ReportParameters
             {
                 ReportType = "Summary",
@@ -39,8 +39,7 @@ class Program
                 new ReportStatement { StatementId = "1", Text = userMessage1 }
             },
             IncludeAttachment = false,
-            IndexType = "Assurance",
-            PayloadVersion = "1.0"
+            IndexType = "my-index", //sub for real index names - e.g. Assurance, Risk..
         };
 
         Console.WriteLine($"Created payload with AIRequestId={payload.AIRequestId}");
@@ -79,8 +78,60 @@ class Program
             return;
         }
 
-        var payload = JsonSerializer.Deserialize<AIReportRequestPayload>(requestEntity.ParametersJson);
-        var userMessage = payload.ReportStatements?[0]?.Text ?? "Generate a report";
+        var fullPayload = JsonSerializer.Deserialize<AIReportRequestPayload>(
+            requestEntity.ParametersJson,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true // ensures matching JSON properties
+            });
+
+        string json = JsonSerializer.Serialize(fullPayload, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        // Create reduced payload (only needed properties)
+        var aiPayload = new
+        {
+            DateFrom = fullPayload.DateFrom,
+            DateTo = fullPayload.DateTo,
+            Parameters = fullPayload.Parameters,
+            ReportStatements = fullPayload.ReportStatements,
+            AttachmentUrl = fullPayload.AttachmentUrl,
+            IndexType = fullPayload.IndexType
+        };
+
+        // Collect all statement texts (fallback if none exist)
+        var statements = aiPayload.ReportStatements?
+            .Select(s => s.Text)
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .ToList()
+            ?? new List<string> { "Generate a report" };
+
+        // Turn them into a numbered list for readability
+        string statementsText = string.Join(Environment.NewLine,
+                    statements.Select((t, i) => $"{i + 1}. {t}")
+        );
+
+        // Build user message for AI
+        string userMessage = $@"
+        Using the following information, generate a detailed report.
+
+        Date From: {aiPayload.DateFrom:yyyy-MM-dd}
+        Date To: {aiPayload.DateTo:yyyy-MM-dd}
+
+        Report Type: {aiPayload.Parameters?.ReportType}
+        Category: {string.Join(", ", aiPayload.Parameters?.Filters?.Categories ?? new List<string>())}
+        Attachment URL: {aiPayload.AttachmentUrl}
+        Index Type: {aiPayload.IndexType}
+
+        Statements:
+        {statementsText}
+
+        Search query seed (for retrieval): {string.Join(" ", statements)}
+        ";
+
+        Console.WriteLine(userMessage);
 
         // Run AI
         string systemMessage = """
@@ -95,7 +146,8 @@ class Program
             Do not include Document tags that provide evidence. It doesn't work for us so it is meaningless. 
         """;
 
-        string reportContent = await AIRunner.RunAI(systemMessage, userMessage);
+        string reportContent = await AIRunner.RunAI(systemMessage, userMessage, aiPayload.IndexType);
+
         if (string.IsNullOrWhiteSpace(reportContent))
         {
             Console.WriteLine("AI returned no report content");
@@ -133,7 +185,7 @@ class Program
             Besides the final JSON, you should output no other information, text or thoughts about the quality of the report.
         """;
 
-        string result = await AIRunner.RunAI(systemMessage2, reportContent, false);
+        string result = await AIRunner.RunAI(systemMessage2, reportContent, aiPayload.IndexType, false);
 
         if (string.IsNullOrWhiteSpace(result))
         {
