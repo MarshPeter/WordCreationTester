@@ -1,36 +1,66 @@
-﻿using Azure.Identity;
-using WordCreationTester;
-using Azure.Core;
-using System.IdentityModel.Tokens.Jwt;
+﻿using Azure.Core;
+using Azure.Identity;
 using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text.Json;
 using System.Threading.Tasks;
+using WordCreationTester;
 
 class Program
 {
     static async Task Main(string[] args)
     {
         string userMessage1 = """
-            Show me a summary of all comments made about medication safety.
+         List the most common medication errors reported in the last month.
         """;
 
         string systemMessage1 = """
-            You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
-            With this report, you should create a title for the report that is derived from the original messsage. 
-            This should mean that your report is in the format of:
-            <Title>
-            <Content>
+        You are an AI assistant that helps people find information and create reports. 
+        Only return the report in this format:
 
-            There should be nothing else in your output message. 
-            Your report should be as detailed as possible.
-            Do not include Document tags that provide evidence. It doesn't work for us so it is meaningless. 
+        <Title>
+        <Content>
+
+        The title should be derived from the original message. 
+        The report should be detailed. 
+        If you are unsure or cannot find the information, respond with "No data found".
+        Do not include any document tags or additional information.
         """;
 
-        string userMessage2 = await AIRunner.RunAI(systemMessage1, userMessage1);
+
+
+        // Add core instructions to system message
+        var combinedSystemMessage = @"
+You are a structured AI assistant.
+- Always respond in valid JSON format.
+- Maintain a formal, clear, and professional tone.
+- Follow a consistent structure in all responses.
+- If there is no relevant information, respond exactly with 'No data found'.
+
+" + systemMessage1;
+
+
+
+
+
+        string userMessage2 = await AIRunner.RunAI(combinedSystemMessage, userMessage1);
+
+
 
         if (userMessage2 == null)
         {
             Console.WriteLine("No data was obtained");
             return;
+        }
+
+    
+        try
+        {
+            JsonDocument.Parse(userMessage2.Trim());
+        }
+        catch
+        {
+            userMessage2 = "\"No data found\""; // fallback if AI output is invalid JSON
         }
 
         Console.WriteLine("AI Report:");
