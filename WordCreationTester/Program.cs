@@ -11,40 +11,26 @@ class Program
     static async Task Main(string[] args)
     {
         string userMessage1 = """
-         List the most common medication errors reported in the last month.
+            Show me a summary of all comments made about medication safety.
         """;
 
         string systemMessage1 = """
-        You are an AI assistant that helps people find information and create reports. 
+        You are a structured AI assistant.
         Only return the report in this format:
 
         <Title>
         <Content>
 
         The title should be derived from the original message. 
-        The report should be detailed. 
-        If you are unsure or cannot find the information, respond with "No data found".
-        Do not include any document tags or additional information.
+
+        The content of your report should be mindful of the following: 
+        - The report should be detailed. 
+        - Maintain a formal, clear, and professional tone.
+        - If you are unsure or cannot find the information, respond with "No data found".
+        - Do not include any document tags or additional information.
         """;
 
-
-
-        // Add core instructions to system message
-        var combinedSystemMessage = @"
-You are a structured AI assistant.
-- Always respond in valid JSON format.
-- Maintain a formal, clear, and professional tone.
-- Follow a consistent structure in all responses.
-- If there is no relevant information, respond exactly with 'No data found'.
-
-" + systemMessage1;
-
-
-
-
-
-        string userMessage2 = await AIRunner.RunAI(combinedSystemMessage, userMessage1);
-
+        string userMessage2 = await AIRunner.RunAI(systemMessage1, userMessage1);
 
 
         if (userMessage2 == null)
@@ -53,17 +39,6 @@ You are a structured AI assistant.
             return;
         }
 
-    
-        try
-        {
-            JsonDocument.Parse(userMessage2.Trim());
-        }
-        catch
-        {
-            userMessage2 = "\"No data found\""; // fallback if AI output is invalid JSON
-        }
-
-        Console.WriteLine("AI Report:");
         Console.WriteLine(userMessage2);
 
         string systemMessage2 = """
