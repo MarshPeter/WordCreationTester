@@ -1,10 +1,13 @@
-﻿using Azure.Identity;
-using WordCreationTester;
-using Azure.Core;
-using System.IdentityModel.Tokens.Jwt;
+﻿using Azure.Core;
+using Azure.Identity;
 using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text.Json;
+
 using System.IO;
+
 using System.Threading.Tasks;
+using WordCreationTester;
 
 class Program
 {
@@ -15,18 +18,23 @@ class Program
         """;
 
         string systemMessage1 = """
-            You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
-            With this report, you should create a title for the report that is derived from the original messsage. 
-            This should mean that your report is in the format of:
-            <Title>
-            <Content>
+        You are a structured AI assistant.
+        Only return the report in this format:
 
-            There should be nothing else in your output message. 
-            Your report should be as detailed as possible.
-            Do not include Document tags that provide evidence. It doesn't work for us so it is meaningless. 
+        <Title>
+        <Content>
+
+        The title should be derived from the original message. 
+
+        The content of your report should be mindful of the following: 
+        - The report should be detailed. 
+        - Maintain a formal, clear, and professional tone.
+        - If you are unsure or cannot find the information, respond with "No data found".
+        - Do not include any document tags or additional information.
         """;
 
         string userMessage2 = await AIRunner.RunAI(systemMessage1, userMessage1);
+
 
         if (userMessage2 == null)
         {
@@ -34,7 +42,6 @@ class Program
             return;
         }
 
-        Console.WriteLine("AI Report:");
         Console.WriteLine(userMessage2);
 
         string systemMessage2 = """

@@ -20,7 +20,7 @@ namespace WordCreationTester
             string searchEndpoint = Environment.GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
             string searchKey = Environment.GetEnvironmentVariable("AZURE_SEARCH_API_KEY") ?? "<your-search-api-key>";
             var searchIndex = "my-index";
-            
+
             Console.WriteLine(searchEndpoint);
             Console.WriteLine(searchKey);
 
@@ -42,13 +42,13 @@ namespace WordCreationTester
                 }
 
 #pragma warning restore AOAI001 // Suppress the diagnostic warning
-                options.Temperature = 0.7f;
-                options.TopP = 0.95f;
-                options.FrequencyPenalty = 0f;
-                options.PresencePenalty = 0f;
+                options.Temperature = 0f;
+                options.TopP = 0.2f;
+                options.FrequencyPenalty = 0.5f;
+                options.PresencePenalty = 0.2f;
                 options.MaxOutputTokenCount = 5000;
 #pragma warning disable AOAI001 // Suppress the diagnostic warning
-                
+
                 // This is just for debugging, we can probably turn it off when we are happy with things
                 if (dataSource)
                 {
