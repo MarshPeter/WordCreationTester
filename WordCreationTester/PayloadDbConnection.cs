@@ -5,6 +5,8 @@ public class PayloadDbConnection : DbContext
 {
     public DbSet<AIReportRequestEntity> AIReportRequests { get; set; }
     public DbSet<AIReportResultEntity> AIReportResults { get; set; }
+    public DbSet<AIReportStatusEntity> AIReportStatuses { get; set; }
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {

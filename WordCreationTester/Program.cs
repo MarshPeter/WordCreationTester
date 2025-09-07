@@ -12,37 +12,30 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        Console.WriteLine("=== AI Report Workflow Start ===");
-
-        string userMessage1 = """
-            Show me a summary of all comments made about medication safety.
-        """;
+        string userMessage1 = "Show me a summary of all comments made about medication safety.";
 
         // Create payload
         var payload = new AIReportRequestPayload
         {
             TenantId = Guid.NewGuid(),
             AIRequestId = Guid.NewGuid(),
+
             CreatedBy = "test.user@example.com",
-            DateFrom =  new DateTime(2020, 01, 01),
+            DateFrom = new DateTime(2020, 01, 01),
             DateTo = DateTime.UtcNow.Date,
-            Parameters = new ReportParameters
-            {
-                ReportType = "Summary",
-                Filters = new ReportFilters
-                {
-                    Categories = new List<string> { "Medication Safety" }
-                }
-            },
+
+            ReportType = "Compliance Assurance Report",
+            ReportCategories = new List<string> { "Medication Safety", "Infection Control" },
             ReportStatements = new List<ReportStatement>
             {
-                new ReportStatement { StatementId = "1", Text = userMessage1 }
+                new ReportStatement { Text = userMessage1 },
+                new ReportStatement { Text = "Evaluate medication handling compliance in the last 12 months." },
+                new ReportStatement { Text = "Identify gaps in infection control processes across departments." }
             },
-            IncludeAttachment = false,
-            IndexType = "my-index", //sub for real index names - e.g. Assurance, Risk..
+            IndexType = "my-index",
         };
 
-        Console.WriteLine($"Created payload with AIRequestId={payload.AIRequestId}");
+        Console.WriteLine($"Created payload with AIRequestId: {payload.AIRequestId}");
 
         // Save payload to DB + send minimal message (via PayloadProcessor)
         await PayloadProcessor.ProcessPayloadAsync(payload);
@@ -56,15 +49,15 @@ class Program
 
         Console.WriteLine("Simulating Service Bus processor...");
         await SimulateMessageProcessor(minimalMessage);
-
-        Console.WriteLine("=== Workflow Complete ===");
     }
 
     // Processor receives message, fetches payload, runs AI, saves result
     private static async Task SimulateMessageProcessor(ServiceBusRequestMessage minimalMessage)
     {
-        Console.WriteLine("Processor received message");
-        Console.WriteLine($"TenantId={minimalMessage.TenantId}, AIRequestId={minimalMessage.AIRequestId}");
+        Console.WriteLine("Processor received message.");
+        Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
+
+        await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, "Processing", "Message received for processing.");
 
         using var dbContext = new PayloadDbConnection();
 
@@ -74,66 +67,56 @@ class Program
 
         if (requestEntity == null)
         {
+            await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, "Failed", "No payload found in database.");
             Console.WriteLine("No payload found in DB.");
             return;
         }
 
-        var fullPayload = JsonSerializer.Deserialize<AIReportRequestPayload>(
-            requestEntity.ParametersJson,
-            new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true // ensures matching JSON properties
-            });
-
-        string json = JsonSerializer.Serialize(fullPayload, new JsonSerializerOptions
+        // Extract statements
+        var statements = new List<string>();
+        if (!string.IsNullOrWhiteSpace(requestEntity.ReportStatements))
         {
-            WriteIndented = true
-        });
+            statements = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportStatements);
+        }
 
-        // Create reduced payload (only needed properties)
-        var aiPayload = new
+        if (statements == null || statements.Count == 0)
         {
-            DateFrom = fullPayload.DateFrom,
-            DateTo = fullPayload.DateTo,
-            Parameters = fullPayload.Parameters,
-            ReportStatements = fullPayload.ReportStatements,
-            AttachmentUrl = fullPayload.AttachmentUrl,
-            IndexType = fullPayload.IndexType
-        };
+            statements = new List<string> { "Generate a report" };
+        }
 
-        // Collect all statement texts (fallback if none exist)
-        var statements = aiPayload.ReportStatements?
-            .Select(s => s.Text)
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .ToList()
-            ?? new List<string> { "Generate a report" };
+        //string statementsText = string.Join(Environment.NewLine,
+        //    statements.Select((t, i) => $"{i + 1}. {t}")
+        //);
 
-        // Turn them into a numbered list for readability
-        string statementsText = string.Join(Environment.NewLine,
-                    statements.Select((t, i) => $"{i + 1}. {t}")
-        );
+        // Extract categories
+        var categories = new List<string>();
+        if (!string.IsNullOrWhiteSpace(requestEntity.ReportCategories))
+        {
+            categories = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportCategories);
+        }
 
-        // Build user message for AI
+        // Build AI user message
         string userMessage = $@"
-        Using the following information, generate a detailed report.
+            Using the following information, generate a detailed report.
 
-        Date From: {aiPayload.DateFrom:yyyy-MM-dd}
-        Date To: {aiPayload.DateTo:yyyy-MM-dd}
+            Date From: {requestEntity.DateFrom:yyyy-MM-dd}
+            Date To: {requestEntity.DateTo:yyyy-MM-dd}
 
-        Report Type: {aiPayload.Parameters?.ReportType}
-        Category: {string.Join(", ", aiPayload.Parameters?.Filters?.Categories ?? new List<string>())}
-        Attachment URL: {aiPayload.AttachmentUrl}
-        Index Type: {aiPayload.IndexType}
+            Search query seed (for retrieval): {string.Join(" ", statements)}
 
-        Statements:
-        {statementsText}
+            Include information on these categories: {string.Join(", ", categories ?? new List<string>())}
 
-        Search query seed (for retrieval): {string.Join(" ", statements)}
+            Generate a report of type: {requestEntity.ReportType}
+            
+            Index Type: {requestEntity.IndexType}
+
         ";
 
         Console.WriteLine(userMessage);
 
         // Run AI
+        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "AI report generation started.");
+
         string systemMessage = """
             You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
             With this report, you should create a title for the report that is derived from the original messsage. 
@@ -146,11 +129,13 @@ class Program
             Do not include Document tags that provide evidence. It doesn't work for us so it is meaningless. 
         """;
 
-        string reportContent = await AIRunner.RunAI(systemMessage, userMessage, aiPayload.IndexType);
+
+        string reportContent = await AIRunner.RunAI(systemMessage, userMessage, requestEntity.IndexType);
 
         if (string.IsNullOrWhiteSpace(reportContent))
         {
-            Console.WriteLine("AI returned no report content");
+            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "AI returned no report content.");
+            Console.WriteLine("AI returned no report content.");
             return;
         }
 
@@ -185,10 +170,11 @@ class Program
             Besides the final JSON, you should output no other information, text or thoughts about the quality of the report.
         """;
 
-        string result = await AIRunner.RunAI(systemMessage2, reportContent, aiPayload.IndexType, false);
+        string result = await AIRunner.RunAI(systemMessage2, reportContent, requestEntity.IndexType, false);
 
         if (string.IsNullOrWhiteSpace(result))
         {
+            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "No structured JSON returned by AI.");
             Console.WriteLine("No structured JSON was returned.");
             return;
         }
@@ -196,8 +182,9 @@ class Program
         Console.WriteLine("Structured JSON:");
         Console.WriteLine(result);
 
-
         // Save Word doc + upload to Blob
+        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
+
         string docsDirectory = "./docs";
         Directory.CreateDirectory(docsDirectory);
         ReportCreator.runGeneration(result);
@@ -219,6 +206,8 @@ class Program
 
         requestEntity.Status = "Completed";
         await dbContext.SaveChangesAsync();
+
+        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Completed", $"Report generated successfully and uploaded. URL={blobUrl}");
 
         Console.WriteLine($"Report stored in DB, URL={blobUrl}");
     }

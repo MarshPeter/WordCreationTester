@@ -8,8 +8,20 @@ namespace WordCreationTester
         [Key] public Guid AIRequestId { get; set; }
         public Guid TenantId { get; set; }
         public string CreatedBy { get; set; }
-        public string ParametersJson { get; set; }
-        public string Status { get; set; }
+
         public DateTime CreatedAt { get; set; }
+        public string? Status { get; set; }              // e.g. Pending, Processing, Completed, Failed
+        public string? StatusDescription { get; set; }   // Details of status/failure
+
+        public DateTime DateFrom { get; set; }
+        public DateTime DateTo { get; set; }
+        public string ReportType { get; set; }
+        public string ReportCategories { get; set; } // JSON array
+        public string ReportStatements { get; set; } // JSON array
+        public string IndexType { get; set; }
+
+        
+        
     }
+
 }
