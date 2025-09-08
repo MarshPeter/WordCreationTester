@@ -9,10 +9,10 @@ namespace WordCreationTester
         public Guid AIRequestId { get; set; }   // FK back to the request
         public Guid TenantId { get; set; }
 
-        public string ReportName { get; set; }
-        public string ReportBlobUrl { get; set; }   // blob storage link
-        public string Status { get; set; }      // Completed / Failed / etc.
+        public required string ReportName { get; set; }
+        public required string ReportBlobUrl { get; set; }   // blob storage link
+        public required string Status { get; set; }      // Completed / Failed / etc.
 
-        public DateTime? CompletedAt { get; set; }
+        public DateTime CompletedAt { get; set; }
     }
 }
