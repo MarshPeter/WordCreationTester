@@ -2,11 +2,10 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using CsvParser.Data;
 using CsvParser.Services;
 using CsvParser.Configuration;
-using System;
 using CSVParser.Data;
+using CsvParser.DTO;
 
 namespace CsvParser
 {
@@ -16,15 +15,26 @@ namespace CsvParser
         {
             var host = CreateHostBuilder(args).Build();
 
+            var test = new List<IndexDefintion>
+            {
+                new IndexDefintion("test", "test is a test")
+            };
+
+            string tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
+
+
             try
             {
                 var csvExportService = host.Services.GetRequiredService<CsvExportService>();
                 var azureUploadService = host.Services.GetRequiredService<AzureUploadService>();
+                var indexer = host.Services.GetRequiredService<IndexCreatorService>();
                 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
                 logger.LogInformation("Starting CSV export process...");
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+                // bool res = await indexer.UpdateDatabaseIndexInformation(test, tenantId);
 
                 // Export CSV
                 string csvPath = await csvExportService.ExportAssuranceCsvAsync(timestamp);
@@ -37,6 +47,7 @@ namespace CsvParser
 
                 // Clean up local file
                 File.Delete(csvPath);
+
                 logger.LogInformation("Local CSV file cleaned up");
             }
             catch (Exception ex)
@@ -61,6 +72,7 @@ namespace CsvParser
                     // Services
                     services.AddScoped<CsvExportService>();
                     services.AddScoped<AzureUploadService>();
+                    services.AddScoped<IndexCreatorService>();
                 });
     }
 }
