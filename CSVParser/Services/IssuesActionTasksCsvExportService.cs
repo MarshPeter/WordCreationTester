@@ -7,18 +7,17 @@ using CsvParser.Configuration;
 using CSVParser.Data;
 using CsvParser.Data.Models;
 
-
 namespace CsvParser.Services
 {
-    public class CsvExportService
+    public class IssuesActionTasksCsvExportService
     {
         private readonly TMRRadzenContext _dbContext;
-        private readonly ILogger<CsvExportService> _logger;
+        private readonly ILogger<IssuesActionTasksCsvExportService> _logger;
         private readonly AppSettings _settings;
 
-        public CsvExportService(
+        public IssuesActionTasksCsvExportService(
             TMRRadzenContext dbContext,
-            ILogger<CsvExportService> logger,
+            ILogger<IssuesActionTasksCsvExportService> logger,
             IOptions<AppSettings> settings)
         {
             _dbContext = dbContext;
@@ -26,16 +25,16 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-        public async Task<string> ExportAssuranceCsvAsync(string timestamp, CancellationToken ct = default)
+        public async Task<string> ExportIssuesActionTasksCsvAsync(string timestamp, CancellationToken ct = default)
         {
             // Create output directory
             Directory.CreateDirectory(_settings.OutputDirectory);
-            string filePath = Path.Combine(_settings.OutputDirectory, $"assurance-report-{timestamp}.csv");
+            string filePath = Path.Combine(_settings.OutputDirectory, $"issues-actions-tasks-{timestamp}.csv");
 
             // Set command timeout
             _dbContext.Database.SetCommandTimeout(_settings.SqlCommandTimeoutSec);
 
-            var query = BuildAssuranceQuery()
+            var query = BuildIssuesActionTasksQuery()
                 .AsNoTracking()
                 .Take(_settings.CsvMaxRows);
 
@@ -47,55 +46,34 @@ namespace CsvParser.Services
             return filePath;
         }
 
-        private IQueryable<AssuranceCsvRow> BuildAssuranceQuery()
+        private IQueryable<IssuesActionTasksCsvRow> BuildIssuesActionTasksQuery()
         {
-            // Structured branch
-            var structured =
-                from a in _dbContext.AssuranceSubmissionProcesseds
-                join d in _dbContext.Divisions on a.DivisionId equals d.Id
-                join u in _dbContext.AspNetUsers on a.CreatedById equals u.Id
-                join t in _dbContext.AssuranceTemplates on a.AssuranceTemplateId equals t.Id
-                join al in _dbContext.AssuranceSubmissionLogs on a.AssuranceSubmissionLogId equals al.Id
-                join ap in _dbContext.AssurancePrograms on al.AssuranceProgramId equals ap.Id
-                join s in _dbContext.AssuranceSubmissionProcessedResponsesStructureds
-                    on a.Id equals s.AssuranceSubmissionProcessedId
+            var query = from i in _dbContext.IssuesActionsTasks
+                        join d in _dbContext.Divisions on i.DivisionId equals d.Id
+                        join u in _dbContext.IssuesActionsTasksUrgencyAndOffsets on i.UrgencyId equals u.Id
+                        join t in _dbContext.IssuesActionTaskTypes on i.IATTypeId equals t.Id
+                        join us in _dbContext.AspNetUsers on i.AllocatedToId equals us.Id
+                        orderby i.CreatedDt
+                        select new IssuesActionTasksCsvRow
+                        {
+                            Title = i.Title,
+                            Status = i.Status == 1 ? "New" :
+                                    i.Status == 2 ? "In Progress" :
+                                    i.Status == 3 ? "Rejected" :
+                                    i.Status == 4 ? "Done" : "Unknown",
+                            Description = i.Description,
+                            Outcome = i.Outcome,
+                            IATCategory = i.IATCategory,
+                            CreatedDt = i.CreatedDt,
+                            DueDate = i.DueDate,
+                            Location = d.Name,
+                            Urgency = u.Name,
+                            UrgencyDescription = u.Description,
+                            Type = t.Name,
+                            Allocated = us.UserName
+                        };
 
-                // LEFT JOINs
-                join sa0 in _dbContext.AssuranceSubmissionprocessedResponsesStructuredAnswers
-                    on s.Id equals sa0.AssuranceSubmissionProcessedResponsesStructuredId into saGrp
-                from sa in saGrp.DefaultIfEmpty()
-
-                join c0 in _dbContext.AssuranceSubmissionProcessedComments
-                    on a.Id equals c0.AssuranceSubmissionProcessedId into cGrp
-                from c in cGrp.DefaultIfEmpty()
-
-                join w0 in _dbContext.AssuranceSubmissionProcessedRisksStandardsActsWeightings
-                    on a.Id equals w0.AssuranceSubmissionprocessedId into wGrp
-                from w in wGrp.DefaultIfEmpty()
-
-                select new AssuranceCsvRow
-                {
-                    A_Id = a.Id.ToString(),
-                    Location = d.Name,
-                    UserName = u.UserName,
-                    AssuranceTemplate = t.Name,
-                    AssuranceProgram = ap.Name,
-                    ProcessedYear = a.CreatedDt.Year,
-                    ProcessedMonth = a.CreatedDt.Month,
-                    ProcessedDate = a.CreatedDt.Month + "/" + a.CreatedDt.Year,
-                    QuestionText = s.QuestionText,
-                    QuestionIdentifier = s.QuestionIdentifier,
-                    Answer = sa != null ? sa.Answer : null,
-                    AnswerBGColor = sa != null ? sa.AnswerBGColor : null,
-                    AnswerFGColor = sa != null ? sa.AnswerFGColor : null,
-                    Comment = c != null ? c.Comment : null,
-                    RiskStandardActName = _dbContext.RisksStandardsActs
-                        .Where(x => w != null && x.Id == w.RisksStandardsActsId)
-                        .Select(x => x.Name)
-                        .FirstOrDefault()
-                };
-
-            return structured;
+            return query;
         }
 
         private async Task WriteCsvFileAsync<T>(string filePath, IQueryable<T> query, CancellationToken ct)
