@@ -4,6 +4,7 @@ using CsvParser.Configuration;
 using CsvParser.Data.Models;
 using CsvParser.DTO;
 using CSVParser.Data;
+using CsvParser.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,12 +20,12 @@ namespace CsvParser.Services
     public class IndexCreatorService
     {
         private readonly TMRRadzenContext _dbContext;
-        private readonly ILogger<CsvExportService> _logger;
+        private readonly ILogger<ICSVExporter> _logger;
         private readonly AppSettings _settings;
 
         public IndexCreatorService(
             TMRRadzenContext dbContext,
-            ILogger<CsvExportService> logger,
+            ILogger<ICSVExporter> logger,
             IOptions<AppSettings> settings)
         {
             _dbContext = dbContext;
@@ -102,7 +103,7 @@ namespace CsvParser.Services
         }
 
         public async Task<bool> UpdateDatabaseIndexInformation(
-            List<IndexDefintion> createdIndexes,
+            List<IndexDefinition> createdIndexes,
             string tenantId,
             CancellationToken ct = default)
         {
