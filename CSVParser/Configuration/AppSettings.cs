@@ -7,6 +7,6 @@
         public int CsvMaxFieldChars { get; set; } = 2000;
         public int SqlCommandTimeoutSec { get; set; } = 600;
         public string OutputDirectory { get; set; } = "./docs/temp_csv";
-        public string BlobContainerName { get; set; } = "reports";
+        public string BlobContainerBaseName { get; set; } = "reports";
     }
 }

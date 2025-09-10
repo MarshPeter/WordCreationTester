@@ -36,17 +36,16 @@ namespace CsvParser.Services
         public async Task<bool> CreateIndex(string indexName)
         {
             string searchServiceName = "swintesting-ai-programmatic-showcase";
-            string dataSourceName = "my-test";
-            string skillsetName = "my-test";
-            // indexName = "my-index";
-            string indexerName = "my-test";
+            string dataSourceName = $"{indexName}-data-source";
+            string skillsetName = $"{indexName}-skillset";
+            string indexerName = $"{indexName}-indexer";
             string resourceGroup = "TMRRadzen";
             string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
-            string containerName = "documents";
+            string containerName = "reports";
             string openAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
             string openAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-
+            
             //THE FOLLOWING CODE IS AN EXAMPLE OF INDEXING CREATION
             string dataSourcePayload = $@"
 {{
@@ -54,7 +53,7 @@ namespace CsvParser.Services
     ""description"": ""Data source for blob container"",
     ""type"": ""azureblob"",
     ""credentials"": {{ ""connectionString"": ""{blobConnectionString}"" }},
-    ""container"": {{ ""name"": ""{containerName}"" }}
+    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{indexName + '/'}"" }}
 }}";
 
             //// 1. Create Data Source (as before)
@@ -150,6 +149,7 @@ namespace CsvParser.Services
                         {
                             Id = Guid.NewGuid(),
                             IndexName = indexDef.IndexName,
+                            DisplayName = indexDef.DisplayName,
                             IndexDescription = indexDef.IndexDescription
                         };
                         _dbContext.AIReportIndexes.Add(reportIndex);

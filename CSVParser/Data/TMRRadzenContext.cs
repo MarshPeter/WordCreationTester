@@ -406,6 +406,9 @@ public partial class TMRRadzenContext : DbContext
             entity.Property(e => e.IndexName)
                 .IsRequired()
                 .HasMaxLength(300);
+            entity.Property(e => e.DisplayName)
+                .IsRequired()
+                .HasMaxLength(300);
             entity.Property(e => e.IndexDescription)
                 .IsRequired()
                 .HasMaxLength(300);

@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 namespace CsvParser.DTO
 {
     public record IndexDefinition(
-        string IndexName, 
-        string IndexDescription, 
+        string IndexName,
+        string DisplayName,
+        string IndexDescription,
         ICSVExporter ExportService
     );
 }

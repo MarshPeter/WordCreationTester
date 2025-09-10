@@ -10,6 +10,7 @@ namespace CsvParser.Data.Models
     {
         public Guid Id { get; set; }
         public string IndexName { get; set; }
+        public string DisplayName { get; set; }
         public string IndexDescription { get; set; }
         public ICollection<AIReportTenantIndexes> ReportTenantIndexes { get; set; }
     }

@@ -25,17 +25,20 @@ namespace CsvParser
                 var indexes = new List<IndexDefinition>
                 {
                     new IndexDefinition(
+                        "assurances",
                         "Assurances",
                         "Contains informtion regarding comments made regarding assurance practices",
                         host.Services.GetRequiredService<AssuranceCsvExportService>()),
 
                     new IndexDefinition(
-                        "IssuesActionsTasks",
+                        "issues-actions-tasks",
+                        "Issues/Actions/Tasks",
                         "Contains information about issues that have been listed, actions that have been made, and tasks that have been set to monitor the issues",
                         host.Services.GetRequiredService<IssuesActionTasksCsvExportService>()),
 
                     new IndexDefinition(
-                        "ComplaintsAndComplements",
+                        "complaints-and-complements",
+                        "Complaints And Complements",
                         "Contains information about received complaints and complements towards the business",
                         host.Services.GetRequiredService<ComplaintsOrComplimentsCsvExportService>())
                 };
@@ -61,18 +64,18 @@ namespace CsvParser
                         idx.IndexName,
                         logger
                     );
-                    logger.LogInformation($"Duplicates removed from {idx.IndexName}");
+                    logger.LogInformation("Duplicates removed from {index_name}", idx.IndexName);
 
                     string assuranceBlobName = Path.GetFileName(finalCsvPath);
-                    await azureUploadService.UploadFileAsync(finalCsvPath, assuranceBlobName);
-                    logger.LogInformation($"{idx.IndexName} CSV uploaded as: {assuranceBlobName}");
+                    await azureUploadService.UploadFileAsync(finalCsvPath, assuranceBlobName, idx.IndexName);
+                    logger.LogInformation("{index_name} CSV uploaded as: {assurance_blob_name}", idx.IndexName, assuranceBlobName);
 
                     File.Delete(finalCsvPath);
                     File.Delete(csvPath);
                     logger.LogInformation("Local leftover CSV files have been removed");
                 }
 
-                // bool res = await indexer.UpdateDatabaseIndexInformation(indexes, tenantId);
+                await indexer.UpdateDatabaseIndexInformation(indexes, tenantId);
 
             }
             catch (Exception ex)
@@ -85,7 +88,7 @@ namespace CsvParser
 
         /// Generic method to process any CSV for duplicates while preserving original filename  
         private static async Task<string> ProcessCsvForDuplicates(
-            string originalCsvPath,
+            string originalCsvPath,The 
             CsvDuplicateRemovalService duplicateRemovalService,
             string csvType,
             ILogger logger)
