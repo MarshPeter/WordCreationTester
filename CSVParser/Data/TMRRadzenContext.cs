@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using CsvParser.Data.Models;
 using CSVParser.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,10 @@ public partial class TMRRadzenContext : DbContext
         : base(options)
     {
     }
+
+    public virtual DbSet<AICSVDocuments> AICSVDocuments { get; set; }
+    public virtual DbSet<AIReportIndexes> AIReportIndexes { get; set; }
+    public virtual DbSet<AIReportTenantIndexes> AIReportTenantIndexes { get; set; }
 
     public virtual DbSet<AIReportRequest> AIReportRequests { get; set; }
 
@@ -375,37 +380,63 @@ public partial class TMRRadzenContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AIReportRequest>(entity =>
+        modelBuilder.Entity<AICSVDocuments>(entity =>
         {
-            entity.ToTable("AIReportRequest");
+            entity.ToTable("AICSVDocument");
+
+            entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedById)
+            entity.Property(e => e.TenantId)
                 .IsRequired()
                 .HasMaxLength(450);
-            entity.Property(e => e.CreatedDt)
+            entity.Property(e => e.LastUpdatedTimestamp)
                 .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.DisplayId)
-                .IsRequired()
-                .HasMaxLength(50);
-            entity.Property(e => e.FromDt).HasColumnType("datetime");
-            entity.Property(e => e.OutcomeDt).HasColumnType("datetime");
-            entity.Property(e => e.ReportParametersJSON).IsRequired();
-            entity.Property(e => e.ReportType).HasDefaultValue(1);
-            entity.Property(e => e.ToDt).HasColumnType("datetime");
+                .HasColumnType("datetime")
+                .IsRequired();
 
-            entity.HasOne(d => d.CreatedBy).WithMany(p => p.AIReportRequests)
-                .HasForeignKey(d => d.CreatedById)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_AIReportRequest_AspNetUsers");
+        });
+
+        modelBuilder.Entity<AIReportIndexes>(entity =>
+        {
+            entity.ToTable("AIReportIndexes");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.IndexName)
+                .IsRequired()
+                .HasMaxLength(300);
+            entity.Property(e => e.DisplayName)
+                .IsRequired()
+                .HasMaxLength(300);
+            entity.Property(e => e.IndexDescription)
+                .IsRequired()
+                .HasMaxLength(300);
+        });
+
+        modelBuilder.Entity<AIReportTenantIndexes>(entity =>
+        {
+            entity.ToTable("AIReportTenantIndexes");
+            entity.HasKey(e => new { e.AIDocumentId, e.AIReportIndexId });
+
+            entity.HasOne(e => e.Document)
+                .WithMany(d => d.ReportTenantIndexes)
+                .HasForeignKey(e => e.AIDocumentId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_AICSVDocument");
+
+            entity.HasOne(e => e.Index)
+                .WithMany(d => d.ReportTenantIndexes)
+                .HasForeignKey(p => p.AIReportIndexId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_AIReportIndexes");
         });
 
         modelBuilder.Entity<AIReportRequest1>(entity =>
         {
             entity.HasKey(e => e.AIRequestId).HasName("PK__AIReport__88B14AE7AFB856F1");
 
-            entity.ToTable("AIReportRequests");
+            entity.ToTable("AIReportRequests1");
 
             entity.Property(e => e.AIRequestId).ValueGeneratedNever();
             entity.Property(e => e.CreatedBy)

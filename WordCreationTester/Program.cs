@@ -13,9 +13,16 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string userMessage1 = """
-            Show me a summary of all comments made about medication safety.
-        """;
+
+        // Payload from args initially contains TenantID + RequestID
+
+        // Request Data from database about the RequestID that matches the TenantID. (The user question, the indexName, etc.)
+
+        //string userMessage1 = """
+        //    Show me a summary of all comments made about medication safety.
+        //""";
+
+        string userMessage1 = userQuestion;
 
         string systemMessage1 = """
         You are a structured AI assistant.
@@ -33,7 +40,7 @@ class Program
         - Do not include any document tags or additional information.
         """;
 
-        string userMessage2 = await AIRunner.RunAI(systemMessage1, userMessage1);
+        string userMessage2 = await AIRunner.RunAI(systemMessage1, userMessage1, indexName);
 
 
         if (userMessage2 == null)

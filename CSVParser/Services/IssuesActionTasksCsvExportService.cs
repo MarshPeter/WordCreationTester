@@ -6,18 +6,19 @@ using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
 using CsvParser.Data.Models;
+using CsvParser.Interfaces;
 
 namespace CsvParser.Services
 {
-    public class IssuesActionTasksCsvExportService
+    public class IssuesActionTasksCsvExportService : ICSVExporter
     {
         private readonly TMRRadzenContext _dbContext;
-        private readonly ILogger<IssuesActionTasksCsvExportService> _logger;
+        private readonly ILogger<ICSVExporter> _logger;
         private readonly AppSettings _settings;
 
         public IssuesActionTasksCsvExportService(
             TMRRadzenContext dbContext,
-            ILogger<IssuesActionTasksCsvExportService> logger,
+            ILogger<ICSVExporter> logger,
             IOptions<AppSettings> settings)
         {
             _dbContext = dbContext;
@@ -25,11 +26,11 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-        public async Task<string> ExportIssuesActionTasksCsvAsync(string timestamp, CancellationToken ct = default)
+        public async Task<string> ExportCSV(string csvName, string timestamp, CancellationToken ct = default)
         {
             // Create output directory
             Directory.CreateDirectory(_settings.OutputDirectory);
-            string filePath = Path.Combine(_settings.OutputDirectory, $"issues-actions-tasks-{timestamp}.csv");
+            string filePath = Path.Combine(_settings.OutputDirectory, $"{csvName}-{timestamp}.csv");
 
             // Set command timeout
             _dbContext.Database.SetCommandTimeout(_settings.SqlCommandTimeoutSec);
@@ -38,11 +39,12 @@ namespace CsvParser.Services
                 .AsNoTracking()
                 .Take(_settings.CsvMaxRows);
 
-            _logger.LogInformation("Starting CSV export with max {MaxRows} rows", _settings.CsvMaxRows);
+            _logger.LogInformation("Starting CSV export with max {CsvMaxRows} rows", _settings.CsvMaxRows);
 
             await WriteCsvFileAsync(filePath, query, ct);
 
-            _logger.LogInformation("CSV export complete. File: {FilePath}", Path.GetFullPath(filePath));
+            _logger.LogInformation("CSV export complete. File: {file_path}", Path.GetFullPath(filePath));
+
             return filePath;
         }
 

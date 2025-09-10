@@ -6,10 +6,11 @@ using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
 using CsvParser.Data.Models;
+using CsvParser.Interfaces;
 
 namespace CsvParser.Services
 {
-    public class ComplaintsOrComplimentsCsvExportService
+    public class ComplaintsOrComplimentsCsvExportService  : ICSVExporter
     {
         private readonly TMRRadzenContext _dbContext;
         private readonly ILogger<ComplaintsOrComplimentsCsvExportService> _logger;
@@ -25,11 +26,11 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-        public async Task<string> ExportComplaintsOrComplimentsCsvAsync(string timestamp, CancellationToken ct = default)
+        public async Task<string> ExportCSV(string csvName, string timestamp, CancellationToken ct = default)
         {
             // Create output directory
             Directory.CreateDirectory(_settings.OutputDirectory);
-            string filePath = Path.Combine(_settings.OutputDirectory, $"complaints-or-compliments-{timestamp}.csv");
+            string filePath = Path.Combine(_settings.OutputDirectory, $"{csvName}-{timestamp}.csv");
 
             // Set command timeout
             _dbContext.Database.SetCommandTimeout(_settings.SqlCommandTimeoutSec);

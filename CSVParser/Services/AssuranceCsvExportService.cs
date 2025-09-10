@@ -6,18 +6,19 @@ using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
 using CsvParser.Data.Models;
+using CsvParser.Interfaces;
 
 namespace CsvParser.Services
 {
-    public class AssuranceCsvExportService
+    public class AssuranceCsvExportService : ICSVExporter
     {
         private readonly TMRRadzenContext _dbContext;
-        private readonly ILogger<AssuranceCsvExportService> _logger;
+        private readonly ILogger<ICSVExporter> _logger;
         private readonly AppSettings _settings;
 
         public AssuranceCsvExportService(
             TMRRadzenContext dbContext,
-            ILogger<AssuranceCsvExportService> logger,
+            ILogger<ICSVExporter> logger,
             IOptions<AppSettings> settings)
         {
             _dbContext = dbContext;
@@ -25,11 +26,11 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-        public async Task<string> ExportAssuranceCsvAsync(string timestamp, CancellationToken ct = default)
+        public async Task<string> ExportCSV(string csvName, string timestamp, CancellationToken ct = default)
         {
             // Create output directory
             Directory.CreateDirectory(_settings.OutputDirectory);
-            string filePath = Path.Combine(_settings.OutputDirectory, $"assurance-report-{timestamp}.csv");
+            string filePath = Path.Combine(_settings.OutputDirectory, $"{csvName}-{timestamp}.csv");
 
             // Set command timeout
             _dbContext.Database.SetCommandTimeout(_settings.SqlCommandTimeoutSec);
@@ -57,17 +58,17 @@ namespace CsvParser.Services
                                     on s.Id equals sa.AssuranceSubmissionProcessedResponsesStructuredId into saGroup
                                   from sa in saGroup.DefaultIfEmpty()
 
-                                      // LEFT JOIN for comments
+                                  // LEFT JOIN for comments
                                   join c in _dbContext.AssuranceSubmissionProcessedComments
                                     on a.Id equals c.AssuranceSubmissionProcessedId into cGroup
                                   from c in cGroup.DefaultIfEmpty()
 
-                                      // LEFT JOIN for weightings
+                                  // LEFT JOIN for weightings
                                   join w in _dbContext.AssuranceSubmissionProcessedRisksStandardsActsWeightings
                                     on a.Id equals w.AssuranceSubmissionprocessedId into wGroup
                                   from w in wGroup.DefaultIfEmpty()
 
-                                      // INNER JOIN for risk acts (this filters out records without risk data)
+                                  // INNER JOIN for risk acts (this filters out records without risk data)
                                   join r in _dbContext.RisksStandardsActs
                                     on w.RisksStandardsActsId equals r.Id
 

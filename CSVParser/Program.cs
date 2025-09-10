@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CsvParser.Configuration;
+using CsvParser.DTO;
+using CsvParser.Services;
+using CSVParser.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using CsvParser.Data;
-using CsvParser.Services;
-using CsvParser.Configuration;
-using System;
-using CSVParser.Data;
 
 namespace CsvParser
 {
@@ -16,83 +15,68 @@ namespace CsvParser
         {
             var host = CreateHostBuilder(args).Build();
 
+            string tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
+
+
             try
             {
-                var csvExportService = host.Services.GetRequiredService<AssuranceCsvExportService>();
-                var issuesExportService = host.Services.GetRequiredService<IssuesActionTasksCsvExportService>();
-                var complaintsExportService = host.Services.GetRequiredService<ComplaintsOrComplimentsCsvExportService>();
+                // We should have less indexes in this list than the number that is allowed in AI Search Services and our Tier
+                // For basic tier, we must not have more than 15
+                var indexes = new List<IndexDefinition>
+                {
+                    new IndexDefinition(
+                        "assurances",
+                        "Assurances",
+                        "Contains informtion regarding comments made regarding assurance practices",
+                        host.Services.GetRequiredService<AssuranceCsvExportService>()),
+
+                    new IndexDefinition(
+                        "issues-actions-tasks",
+                        "Issues/Actions/Tasks",
+                        "Contains information about issues that have been listed, actions that have been made, and tasks that have been set to monitor the issues",
+                        host.Services.GetRequiredService<IssuesActionTasksCsvExportService>()),
+
+                    new IndexDefinition(
+                        "complaints-and-complements",
+                        "Complaints And Complements",
+                        "Contains information about received complaints and complements towards the business",
+                        host.Services.GetRequiredService<ComplaintsOrComplimentsCsvExportService>())
+                };
+
+
                 var azureUploadService = host.Services.GetRequiredService<AzureUploadService>();
                 var duplicateRemovalService = host.Services.GetRequiredService<CsvDuplicateRemovalService>();
+                var indexer = host.Services.GetRequiredService<IndexCreatorService>();
                 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
                 logger.LogInformation("Starting CSV export process...");
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
-                // Export Assurance CSV (existing)
-                logger.LogInformation("Starting Assurance CSV export...");
-                string assuranceCsvPath = await csvExportService.ExportAssuranceCsvAsync(timestamp);
-                logger.LogInformation("Assurance CSV exported to: {FilePath}", assuranceCsvPath);
+                foreach (var idx in indexes)
+                {
+                    string csvPath = await idx.ExportService.ExportCSV(idx.IndexName, timestamp);
+                    logger.LogInformation($"{idx.IndexName} CSV created at: {csvPath}");
 
-                // Process Assurance CSV for duplicates
-                string finalAssuranceCsvPath = await ProcessCsvForDuplicates(
-                    assuranceCsvPath,
-                    duplicateRemovalService,
-                    "Assurance",
-                    logger);
+                    string finalCsvPath = await ProcessCsvForDuplicates(
+                        csvPath,
+                        duplicateRemovalService,
+                        idx.IndexName,
+                        logger
+                    );
+                    logger.LogInformation("Duplicates removed from {index_name}", idx.IndexName);
 
-                // Upload Assurance CSV to Azure
-                string assuranceBlobName = Path.GetFileName(finalAssuranceCsvPath);
-                await azureUploadService.UploadFileAsync(finalAssuranceCsvPath, assuranceBlobName);
-                logger.LogInformation("Assurance CSV uploaded as: {BlobName}", assuranceBlobName);
+                    string assuranceBlobName = Path.GetFileName(finalCsvPath);
+                    await azureUploadService.UploadFileAsync(finalCsvPath, assuranceBlobName, idx.IndexName);
+                    logger.LogInformation("{index_name} CSV uploaded as: {assurance_blob_name}", idx.IndexName, assuranceBlobName);
 
-                // Clean up local assurance file
-                File.Delete(finalAssuranceCsvPath);
-                logger.LogInformation("Local Assurance CSV file cleaned up");
+                    File.Delete(finalCsvPath);
+                    File.Delete(csvPath);
+                    logger.LogInformation("Local leftover CSV files have been removed");
+                }
 
-                // Export Issues/Actions/Tasks CSV
-                logger.LogInformation("Starting Issues/Actions/Tasks CSV export...");
-                string issuesCsvPath = await issuesExportService.ExportIssuesActionTasksCsvAsync(timestamp);
-                logger.LogInformation("Issues/Actions/Tasks CSV exported to: {FilePath}", issuesCsvPath);
+                await indexer.UpdateDatabaseIndexInformation(indexes, tenantId);
 
-                // Process Issues CSV for duplicates
-                string finalIssuesCsvPath = await ProcessCsvForDuplicates(
-                    issuesCsvPath,
-                    duplicateRemovalService,
-                    "Issues/Actions/Tasks",
-                    logger);
-
-                // Upload Issues/Actions/Tasks CSV to Azure
-                string issuesBlobName = Path.GetFileName(finalIssuesCsvPath);
-                await azureUploadService.UploadFileAsync(finalIssuesCsvPath, issuesBlobName);
-                logger.LogInformation("Issues/Actions/Tasks CSV uploaded as: {BlobName}", issuesBlobName);
-
-                // Clean up local issues file
-                File.Delete(finalIssuesCsvPath);
-                logger.LogInformation("Local Issues/Actions/Tasks CSV file cleaned up");
-
-                // Export Complaints or Compliments CSV
-                logger.LogInformation("Starting Complaints or Compliments CSV export...");
-                string complaintsCsvPath = await complaintsExportService.ExportComplaintsOrComplimentsCsvAsync(timestamp);
-                logger.LogInformation("Complaints or Compliments CSV exported to: {FilePath}", complaintsCsvPath);
-
-                // Process Complaints CSV for duplicates
-                string finalComplaintsCsvPath = await ProcessCsvForDuplicates(
-                    complaintsCsvPath,
-                    duplicateRemovalService,
-                    "Complaints or Compliments",
-                    logger);
-
-                // Upload Complaints or Compliments CSV to Azure
-                string complaintsBlobName = Path.GetFileName(finalComplaintsCsvPath);
-                await azureUploadService.UploadFileAsync(finalComplaintsCsvPath, complaintsBlobName);
-                logger.LogInformation("Complaints or Compliments CSV uploaded as: {BlobName}", complaintsBlobName);
-
-                // Clean up local complaints file
-                File.Delete(finalComplaintsCsvPath);
-                logger.LogInformation("Local Complaints or Compliments CSV file cleaned up");
-
-                logger.LogInformation("All CSV export processes completed successfully");
             }
             catch (Exception ex)
             {
@@ -102,9 +86,7 @@ namespace CsvParser
             }
         }
 
-
-        /// Generic method to process any CSV for duplicates while preserving original filename
-       
+        /// Generic method to process any CSV for duplicates while preserving original filename  
         private static async Task<string> ProcessCsvForDuplicates(
             string originalCsvPath,
             CsvDuplicateRemovalService duplicateRemovalService,
@@ -163,6 +145,7 @@ namespace CsvParser
                     services.AddScoped<ComplaintsOrComplimentsCsvExportService>();
                     services.AddScoped<AzureUploadService>();
                     services.AddScoped<CsvDuplicateRemovalService>();
+                    services.AddScoped<IndexCreatorService>();
                 });
     }
 }
