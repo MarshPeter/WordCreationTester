@@ -3,7 +3,7 @@
 using WordCreationTester;
 using Azure.Core;
 
-string searchServiceName = "swintesting-ai-programmatic-showcase";
+string searchServiceName = "swintesting-ai-programmatic-showcase-test";
 string dataSourceName = "my-datasource";
 string skillsetName = "my-skillset";
 string indexName = "my-index";

@@ -7,29 +7,125 @@ using System.Text.Json;
 using System.IO;
 
 using System.Threading.Tasks;
-using WordCreationTester;
+using Azure.Messaging.ServiceBus;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 class Program
 {
     static async Task Main(string[] args)
     {
+        string userMessage1 = "Show me a summary of all comments made about medication safety.";
 
-        // Payload from args initially contains TenantID + RequestID
+        // Create payload
+        var payload = new AIReportRequestPayload
+        {
+            TenantId = Guid.NewGuid(),
+            AIRequestId = Guid.NewGuid(),
 
-        // Request Data from database about the RequestID that matches the TenantID. (The user question, the indexName, etc.)
+            CreatedBy = "test.user@example.com",
+            DateFrom = new DateTime(2020, 01, 01),
+            DateTo = DateTime.UtcNow.Date,
 
-        //string userMessage1 = """
-        //    Show me a summary of all comments made about medication safety.
-        //""";
+            ReportType = "Compliance Assurance Report",
+            ReportCategories = new List<string> { "Medication Safety", "Infection Control" },
+            ReportStatements = new List<ReportStatement>
+            {
+                new ReportStatement { Text = userMessage1 },
+                new ReportStatement { Text = "Evaluate medication handling compliance in the last 12 months." },
+                new ReportStatement { Text = "Identify gaps in infection control processes across departments." }
+            },
+            IndexType = "my-index",
+        };
 
-        string userMessage1 = userQuestion;
+        Console.WriteLine($"Created payload with AIRequestId: {payload.AIRequestId}");
 
-        string systemMessage1 = """
-        You are a structured AI assistant.
-        Only return the report in this format:
+        // Save payload to DB + send minimal message (via PayloadProcessor)
+        await PayloadProcessor.ProcessPayloadAsync(payload);
 
-        <Title>
-        <Content>
+        // Simulate receiving the message from Service Bus
+        var minimalMessage = new ServiceBusRequestMessage
+        {
+            TenantId = payload.TenantId,
+            AIRequestId = payload.AIRequestId
+        };
+
+        Console.WriteLine("Simulating Service Bus processor...");
+        await SimulateMessageProcessor(minimalMessage);
+    }
+
+    // Processor receives message, fetches payload, runs AI, saves result
+    private static async Task SimulateMessageProcessor(ServiceBusRequestMessage minimalMessage)
+    {
+        Console.WriteLine("Processor received message.");
+        Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
+
+        await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, "Processing", "Message received for processing.");
+
+        using var dbContext = new PayloadDbConnection();
+
+        // Fetch full request from DB
+        var requestEntity = await dbContext.AIReportRequests
+            .FirstOrDefaultAsync(r => r.AIRequestId == minimalMessage.AIRequestId);
+
+        if (requestEntity == null)
+        {
+            await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, "Failed", "No payload found in database.");
+            Console.WriteLine("No payload found in DB.");
+            return;
+        }
+
+        // Extract statements
+        var statements = new List<string>();
+        if (!string.IsNullOrWhiteSpace(requestEntity.ReportStatements))
+        {
+            statements = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportStatements);
+        }
+
+        if (statements == null || statements.Count == 0)
+        {
+            statements = new List<string> { "Generate a report" };
+        }
+
+        //string statementsText = string.Join(Environment.NewLine,
+        //    statements.Select((t, i) => $"{i + 1}. {t}")
+        //);
+
+        // Extract categories
+        var categories = new List<string>();
+        if (!string.IsNullOrWhiteSpace(requestEntity.ReportCategories))
+        {
+            categories = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportCategories);
+        }
+
+        // Build AI user message
+        string userMessage = $@"
+            Using the following information, generate a detailed report.
+
+            Date From: {requestEntity.DateFrom:yyyy-MM-dd}
+            Date To: {requestEntity.DateTo:yyyy-MM-dd}
+
+            Search query seed (for retrieval): {string.Join(" ", statements)}
+
+            Include information on these categories: {string.Join(", ", categories ?? new List<string>())}
+
+            Generate a report of type: {requestEntity.ReportType}
+            
+            Index Type: {requestEntity.IndexType}
+
+        ";
+
+        Console.WriteLine(userMessage);
+
+        // Run AI
+        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "AI report generation started.");
+
+        string systemMessage = """
+            You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
+            With this report, you should create a title for the report that is derived from the original messsage. 
+            This should mean that your report is in the format of:
+            <Title>
+            <Content>
 
         The title should be derived from the original message. 
 
@@ -40,16 +136,18 @@ class Program
         - Do not include any document tags or additional information.
         """;
 
-        string userMessage2 = await AIRunner.RunAI(systemMessage1, userMessage1, indexName);
 
+        string reportContent = await AIRunner.RunAI(systemMessage, userMessage, requestEntity.IndexType);
 
-        if (userMessage2 == null)
+        if (string.IsNullOrWhiteSpace(reportContent))
         {
-            Console.WriteLine("No data was obtained");
+            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "AI returned no report content.");
+            Console.WriteLine("AI returned no report content.");
             return;
         }
 
-        Console.WriteLine(userMessage2);
+        Console.WriteLine("AI Report:");
+        Console.WriteLine(reportContent);
 
         string systemMessage2 = """
             Your sole duty is to estimate from these reports what are headers, paragraphs and dot points and to return the report in a array JSON Format that follows this layout exactly:
@@ -79,10 +177,11 @@ class Program
             Besides the final JSON, you should output no other information, text or thoughts about the quality of the report.
         """;
 
-        string result = await AIRunner.RunAI(systemMessage2, userMessage2, false);
+        string result = await AIRunner.RunAI(systemMessage2, reportContent, requestEntity.IndexType, false);
 
         if (string.IsNullOrWhiteSpace(result))
         {
+            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "No structured JSON returned by AI.");
             Console.WriteLine("No structured JSON was returned.");
             return;
         }
@@ -90,31 +189,33 @@ class Program
         Console.WriteLine("Structured JSON:");
         Console.WriteLine(result);
 
-        // Ensure the docs directory exists
+        // Save Word doc + upload to Blob
+        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
+
         string docsDirectory = "./docs";
-        if (!Directory.Exists(docsDirectory))
-        {
-            Directory.CreateDirectory(docsDirectory);
-        }
-
-        // Generate a single timestamp to use for both files
-        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-
-        // Generate the Word document
+        Directory.CreateDirectory(docsDirectory);
         ReportCreator.runGeneration(result);
 
-        // Upload Word file
-        string wordFilePath = $"{docsDirectory}/Generated.docx";
-        string wordBlobName = $"Generated_{timestamp}.docx";
+        string filePath = $"{docsDirectory}/Generated.docx";
+        string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
+        var blobUrl = await AzureUploader.UploadReportAsync(filePath, blobName);
 
-        try
+        // Save results back into DB
+        dbContext.AIReportResults.Add(new AIReportResultEntity
         {
-            await AzureUploader.UploadReportAsync(wordFilePath, wordBlobName);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Upload failed: {ex.Message}");
-        }
+            TenantId = requestEntity.TenantId,
+            AIRequestId = requestEntity.AIRequestId,
+            ReportName = blobName,
+            ReportBlobUrl = blobUrl.ToString(),
+            Status = "Complete",
+            CompletedAt = DateTime.Now
+        });
 
+        requestEntity.Status = "Completed";
+        await dbContext.SaveChangesAsync();
+
+        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Completed", $"Report generated successfully and uploaded. URL={blobUrl}");
+
+        Console.WriteLine($"Report stored in DB, URL={blobUrl}");
     }
 }

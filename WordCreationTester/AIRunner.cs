@@ -13,14 +13,14 @@ namespace WordCreationTester
 {
     public static class AIRunner
     {
-        public static async Task<string> RunAI(string systemMessage, string userMessage, string? searchIndex)
+        public static async Task<string> RunAI(string systemMessage, string userMessage, string searchIndex, bool dataSource = true)
         {
             string AI_endpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT") ?? "https://<your-resource-name>.openai.azure.com/";
             string AI_key = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "<your-key>";
             string searchEndpoint = Environment.GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
             string searchKey = Environment.GetEnvironmentVariable("AZURE_SEARCH_API_KEY") ?? "<your-search-api-key>";
-            var searchIndex = "my-index";
-
+            //var searchIndex = "my-index";
+            
             Console.WriteLine(searchEndpoint);
             Console.WriteLine(searchKey);
 
@@ -35,7 +35,7 @@ namespace WordCreationTester
 #pragma warning disable AOAI001 // Suppress the diagnostic warning
                 var options = new ChatCompletionOptions();
 
-                if (dataSource.HasValue)
+                if (dataSource)
                 {
                     options.AddDataSource(retrieveDataSource(searchEndpoint, searchKey, searchIndex));
                 }
