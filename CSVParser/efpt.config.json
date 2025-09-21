@@ -1,0 +1,910 @@
+﻿{
+   "CodeGenerationMode": 4,
+   "ContextClassName": "TMRRadzenContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "MinimumProductVersion": "2.6.0",
+   "ModelNamespace": null,
+   "OutputContextPath": "Data",
+   "OutputPath": "Data\/Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "CSVParser",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "[dbo].[AIReportRequest]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AIReportRequests]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AIReportResults]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISECollection]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISECollectionSWAGGERS]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISECollectionSWAGGERSKeyValue]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISECollectionTestConfig]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISESubmission]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISESubmissionKeyValuePairs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISESWAGGERManipulations]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[APISESWAGGERS]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ApplicationEventLog]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AspNetRoleClaims]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AspNetRoles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AspNetUserClaims]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AspNetUserLogins]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AspNetUserRoles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AspNetUsers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AspNetUserTokens]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetPurchaseOrderItems]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetPurchaseOrders]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetPurchaseOrderTransactions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegister]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterCategories]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterDepreciationSceduleItems]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterDepreciationSchedule]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterDepreciationScheduleDisposalCodes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterInspectionScheduleComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterInspectionSchedules]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterIssuesLogs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterMaintenanceLogComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterMaintenanceLogLinkIAT]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterMaintenanceLogs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterMaintenanceLogTypes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterReservationComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterReservationReports]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterReservations]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterReservationTermsAndConditions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetRegisterWarranties]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetSupplierComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetSupplierContacts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetSuppliers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssetSupplierTypes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceAutomatedControlTestBatchRun]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceAutomatedControlTestBatchRunLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceAutomatedControlTestDefinition]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceAutomatedControlTestExecutedOutcomes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssurancePrograms]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSchedule]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceScheduleLinkImprovement]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceScheduleUsers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionLog]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessed]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedGroupings]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedResponsesDocsWeightings]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedResponsesStructured]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionprocessedResponsesStructuredAnswers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedResponsesUnStructured]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedResponsesUnStructuredAnswers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedRisksStandardsActsWeightings]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceSubmissionProcessedVoiceTranscriptionAndSentiment]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceTemplates]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceTemplatesScoringBands]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceVoiceStaging]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AssuranceVoiceTestTemplates]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Attachments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[BCPLibrary]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[BusinessContinuityPlans]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[BusinessContinuityPlansComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[BusinessContinuityPlansLinkActions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[BusinessContinuityPlansLinkActionTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ComplaintOrComplimentLinkImprovement]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ComplaintsOrCompliments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ComplaintsOrComplimentsComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ComplaintsOrComplimentsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Credentials]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsConditions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsConditionsPeriodicAcknowledgement]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsNotations]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsRegulatoryBodies]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsReprimands]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsUndertakings]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredentialsUserRegistrations]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredScraperFiles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredScraperGoverningBodies]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CredScraperUserRecord]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DeviceCodes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Divisions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Docs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsAccessLog]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsDelegatedAuthorities]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsItemComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsItems]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsItemsExemptions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsItemsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsKnowledgeTransfer]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsKnowledgeTransferUsers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsLibraryItemsExemptionsConditions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsRelatedChildArtifacts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsReviews]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsReviewsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocsSubscriptionUsers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DocstensExemptionsComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ENUMReference]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Improvements]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementsDelivered]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementsLinkImprovements]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementsLinkRiskDiscoveries]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementsLinkRisksStandardsActs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementsObjectives]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementsObjectivesLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementTeamMembers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementTools]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ImprovementTypes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Incidents]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsCannedBCPs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsCannedReports]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsCategories]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsDivisionOwners]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsEmergencyResponses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsEmergencyResponseTypes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsExternalTeamMembers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsFieldInvestigationCategoriesAndForms]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsFieldInvestigationExternalPartiesLinkIncidents]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsFieldInvestigations]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsFieldInvestigationsFormResults]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsFieldInvestigationSubmissionLog]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsInternalTeamMembers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsLessonsLearnt]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsLessonsLearntKeywords]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsLinkImprovements]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsLinkIncidents]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsLinkIncidentsFieldInvestigationInternalTeamMembers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsLinkRisks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsReports]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsReportsComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsRPOLibrary]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsRPOLibraryLinkIncidents]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsRTOLibrary]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsRTOLibraryLinkIncidents]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsSeverities]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsSnapChartCausalFactors]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsSnapChartLog]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsStatementsOfNeed]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IncidentsStatementsOfNeedLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[InternalAuditPlan]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[InternalAuditPlanResources]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[InternalAuditResources]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[InternalAudits]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[InternalAuditsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[InternalAuditsLinkRiskScenarioActs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IssuesActionsTasksComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IssuesActionsTasksDivisionOwnerOverride]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IssuesActionsTasksLinkToSelf]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IssuesActionsTasksUrgencyAndOffset]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[IssuesActionTaskTypes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Keys]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PersistedGrants]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagementBody]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagementBodyContacts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagementEventLog]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagementOutcomesLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagementResources]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagements]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagementsLinkRegulaotyrEngagementBodyContacts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RegulatoryEngagementsOutcomes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscovery]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryControlScope]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryControlScopeDesignEffectiveness]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryControlScopeDesignEffectivenessLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryControlScopeLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryControlScopeOperatingEffectiveness]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryControlScopeOperatingEffectivenessLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryResources]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryScope]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryScopeInherentAndResidualAssessments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryScopeInherentAndResidualAssessmentsLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RiskDiscoveryScopeLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Risks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksControls]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksControlSuggestionComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksControlSuggestions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksLinkDocs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksLinkRisksStandardsActs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksMatirxsConcequenceLabels]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksMatirxsLikelihoodLabels]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksMatrixLikelihoodConsequenceFields]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksMatrixs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRisk]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskAutomatedControlTestBatch]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskAutomatedControlTestBatchExecutedOutcomes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskAutomatedControlTestBatchLinkIncidents]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskAutomatedControlTestBatchLinkIssuesActionsTasks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskAutomatedControlTestDefinition]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskInherentAndRedisualAssessment]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskInherentAndResidualAssessmentControlEffectiveness]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskInherentAndResidualAssessmentSignOff]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskInherentAndResidualAssessmentUsers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskInherentAndResidualRiskAssessmentLinkImprovement]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskInherentResidualRiskAnalysis]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskInherentRiskAnalysis]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksOwnedRiskResidualRiskAnalysis]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksStandardsActs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksSuggestionComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksSuggestionLinkRisksStandardsActs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RisksSuggestions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SSRSReportGroups]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SSRSReportList]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TenantKeys]",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": true,
+   "UseDatabaseNamesForRoutines": true,
+   "UseDateOnlyTimeOnly": true,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseInternalAccessModifiersForSprocsAndFunctions": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false,
+   "UseT4Split": false
+}

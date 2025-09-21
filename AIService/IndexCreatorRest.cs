@@ -20,12 +20,11 @@ public static class AzureSearchDataSourceCreator
         var tokenRequestContext = new TokenRequestContext(
             new[] { "https://search.azure.com/.default" });
         AccessToken token = await credential.GetTokenAsync(tokenRequestContext);
-
         using var httpClient = new HttpClient();
 
         // Set the Authorization header
         httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", token.Token);
+        new AuthenticationHeaderValue("Bearer", token.Token);
 
         // Set the Content-Type header
         var content = new StringContent(dataSourcePayload, Encoding.UTF8, "application/json");
