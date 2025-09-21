@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using WordCreationTester;
 
 class Program
 {
