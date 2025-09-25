@@ -37,9 +37,7 @@ namespace CsvParser.Services
 
             var query = BuildComplaintsOrComplimentsQuery()
                 .AsNoTracking()
-                .Take(_settings.CsvMaxRows);
-
-            _logger.LogInformation("Starting CSV export with max {MaxRows} rows", _settings.CsvMaxRows);
+                .Take(_settings.CsvMaxRows); // Max rows set to prevent AISearch Index Limits from being breached.
 
             await WriteCsvFileAsync(filePath, query, ct);
 

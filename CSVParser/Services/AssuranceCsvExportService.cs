@@ -35,8 +35,6 @@ namespace CsvParser.Services
             // Set command timeout
             _dbContext.Database.SetCommandTimeout(_settings.SqlCommandTimeoutSec);
 
-            _logger.LogInformation("Starting CSV export with max {MaxRows} rows", _settings.CsvMaxRows);
-
             using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 16);
             using var sw = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 
@@ -138,7 +136,7 @@ namespace CsvParser.Services
             // Combine results (UNION equivalent) and apply limit
             var allResults = structuredResults
                 .Concat(unstructuredResults)
-                .Take(_settings.CsvMaxRows)
+                .Take(_settings.CsvMaxRows) // Max rows set to prevent AISearch Index Limits from being breached.
                 .ToList();
 
             _logger.LogInformation("Total combined results: {Count}", allResults.Count);
