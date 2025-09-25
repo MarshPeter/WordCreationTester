@@ -543,12 +543,17 @@ namespace CsvParser.Services
         {
             string endpoint = $"https://{searchServiceName}.search.windows.net/indexers/{indexerName}?api-version=2024-07-01";
 
+            // If needing to change schedule, can find information here:
+            // https://learn.microsoft.com/en-au/azure/search/search-howto-schedule-indexers?tabs=rest
             string indexerPayload = $@"
 {{
   ""name"": ""{indexerName}"",
   ""dataSourceName"": ""{dataSourceName}"",
   ""skillsetName"": ""{skillsetName}"",
   ""targetIndexName"": ""{indexName}"",
+  ""schedule"": {{           
+    ""interval"": ""P1D""
+  }},
   ""fieldMappings"": [
     {{
       ""sourceFieldName"": ""metadata_storage_name"",
@@ -564,14 +569,6 @@ namespace CsvParser.Services
   }}
 }}
 ";
-
-            // NOTE: To add a schedule add the following code to the above payload
-            //""schedule"": {
-            //    {
-            //        ""interval"": ""P1D"", // Every 1 day
-            //        ""startTime"": ""2024 - 06 - 01T00: 00:00Z""
-            //    }
-            //}
 
             using var client = await AzureSearchHttpClientFactory.CreateAsync();
             var content = new StringContent(indexerPayload, Encoding.UTF8, "application/json");
