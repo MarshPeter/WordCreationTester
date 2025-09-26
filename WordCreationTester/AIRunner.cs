@@ -45,7 +45,7 @@ namespace WordCreationTester
                 options.TopP = 0.2f;
                 options.FrequencyPenalty = 0.5f;
                 options.PresencePenalty = 0.2f;
-                options.MaxOutputTokenCount = 5000;
+                options.MaxOutputTokenCount = 16000;    // Max for gpt-4o-mini is 16384
 #pragma warning disable AOAI001 // Suppress the diagnostic warning
 
                 // This is just for debugging, we can probably turn it off when we are happy with things
