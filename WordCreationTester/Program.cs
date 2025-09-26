@@ -125,6 +125,7 @@ class Program
         - Maintain a formal, clear, and professional tone.
         - If you are unsure or cannot find the information, respond with "No data found".
         - Do not include any document tags or additional information.
+        - You should only ever use straight quotes, no curly quotes. 
         """;
 
 
@@ -164,6 +165,8 @@ class Program
             Columns are the column headers of a table. 
 
             Rows are all the data present in the table. Where every data point is comma separated and every row is in its own array within the rows array. 
+
+            You should only ever use straight quotes, no curly quotes.
 
             Besides the final JSON, you should output no other information, text or thoughts about the quality of the report.
         """;
