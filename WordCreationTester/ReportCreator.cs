@@ -5,10 +5,18 @@ namespace WordCreationTester
 {
     public static class ReportCreator
     {
-        public static void runGeneration(string jsonString)
+        public static void runGeneration(string aiJson)
         {
             string docsDirectory = "./docs";
             string filename = "Generated.docx";
+
+
+            // Sanitize curly quotes into smart quotes in case AI decides to be difficult and disobey instructions
+            string jsonString = aiJson
+                .Replace('“', '"')
+                .Replace('”', '"')
+                .Replace('‘', '\'')
+                .Replace('’', '\'');
 
             try
             {
