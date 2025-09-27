@@ -77,19 +77,21 @@ namespace WordCreationTester
             }
         }
 
-#pragma warning disable AOAI001 // Suppress the diagnostic warning
+#pragma warning disable AOAI001 // suppress experimental warning of AzureSearchChatDataSource - it is promoted as the primary method,
+                                // But is not seen as stable at this stage according to official documentation. 
+
+        // This gives permission to the LLM model to communicate with our AI Search instance
         private static AzureSearchChatDataSource retrieveDataSource(string searchEndpoint, string searchKey, string searchIndex)
         {
-            // var credential = new DefaultAzureCredential();
             return new AzureSearchChatDataSource()
             {
-                Endpoint = new Uri(searchEndpoint),
-                Authentication = DataSourceAuthentication.FromApiKey(searchKey),
-                IndexName = searchIndex,
-                QueryType = DataSourceQueryType.VectorSemanticHybrid,
-                SemanticConfiguration = "my-index-semantic-configuration",
-                VectorizationSource = DataSourceVectorizer.FromDeploymentName("text-embedding-ada-002"),
-                AllowPartialResults = true,
+                Endpoint = new Uri(searchEndpoint),                                                      // Endpoint of Azure Search
+                Authentication = DataSourceAuthentication.FromApiKey(searchKey),                         // Key from Azure Search
+                IndexName = searchIndex,                                                                 // Index from Azure Search
+                QueryType = DataSourceQueryType.VectorSemanticHybrid,                                    // Vector + Semantic Search = Better responses
+                SemanticConfiguration = "my-index-semantic-configuration",                               // Semantic setup
+                VectorizationSource = DataSourceVectorizer.FromDeploymentName("text-embedding-ada-002"), // The Text Embedding LLM Model. This is different from the LLM Model
+                AllowPartialResults = true,                                                              // This allows for predictable results
             };
         }
 #pragma warning restore AOAI001 // Suppress the diagnostic warning
