@@ -89,7 +89,19 @@ class Program
             categories = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportCategories);
         }
 
-        // Build AI user message
+        /*
+      Build AI user message:
+
+      This message tells the AI what report to generate. Each part is included for a reason:
+
+      - Date From/Date To: the report time range
+      - Search query seed: keywords to help find relevant info
+      - Categories: topics to include
+      - ReportType: type of report
+      - IndexType: which data source to use
+
+      This helps future developers understand why each section is needed.
+  */
         string userMessage = $@"
             Using the following information, generate a detailed report.
 
