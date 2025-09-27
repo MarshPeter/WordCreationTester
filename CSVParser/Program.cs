@@ -15,8 +15,15 @@ namespace CsvParser
         {
             var host = CreateHostBuilder(args).Build();
 
-            string tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
-
+            // Read as nullable, then validate
+            string? tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                var bootLogger = host.Services.GetRequiredService<ILogger<Program>>();
+                bootLogger.LogError("Required environment variable AZURE_TENANT_ID is not set.");
+                Environment.Exit(1);
+                return; 
+            }
 
             try
             {
