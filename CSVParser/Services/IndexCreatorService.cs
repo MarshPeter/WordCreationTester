@@ -23,6 +23,8 @@ namespace CsvParser.Services
         private readonly ILogger<ICSVExporter> _logger;
         private readonly AppSettings _settings;
 
+
+        // Constructor: initializes the service with DB context, logger, and application settings
         public IndexCreatorService(
             TMRRadzenContext dbContext,
             ILogger<ICSVExporter> logger,
@@ -35,13 +37,16 @@ namespace CsvParser.Services
 
         public async Task<bool> CreateIndex(string indexName)
         {
+            // Azure Cognitive Search service and related configuration
             string searchServiceName = "swintesting-ai-programmatic-showcase";
             string dataSourceName = $"{indexName}-data-source";
             string skillsetName = $"{indexName}-skillset";
             string indexerName = $"{indexName}-indexer";
             string resourceGroup = "TMRRadzen";
+            // Blob storage configuration
             string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
             string containerName = "reports";
+            // Azure OpenAI configuration
             string openAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
             string openAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
