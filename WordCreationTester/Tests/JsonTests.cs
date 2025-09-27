@@ -4,19 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WordCreationTester
+namespace WordCreationTester.Tests
 {
     public static class JsonTests
     {
-        // JSON string representing the report data
-        public static string jsonString = @"[
+        // JSON string example report that works with the intended behaviour of WordFileGenerator
+        // If this doesn't work, then there is an issue with WordFileGenerator.cs
+        public static readonly string jsonString = @"[
   {
     ""type"": ""title"",
     ""text"": ""The Interconnectedness of Global Ecosystems: A Study of Biodiversity Loss, Climate Change, and Human Impact""
   },
   {
     ""type"": ""header"",
-    ""text"": ""1. Introduction""
+    ""text"": ""1. Introduction""                               
   },
   {
     ""type"": ""paragraph"",
