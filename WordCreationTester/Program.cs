@@ -128,13 +128,16 @@ class Program
         - You should only ever use straight quotes, no curly quotes. 
         """;
 
+        string reportContent;
 
-        string reportContent = await AIRunner.RunAI(systemMessage, userMessage, requestEntity.IndexType);
+        try
+        {
+            reportContent = await AIRunner.RunAI(systemMessage, userMessage, requestEntity.IndexType);
 
-        if (string.IsNullOrWhiteSpace(reportContent))
+        } catch (Exception ex)
         {
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "AI returned no report content.");
-            Console.WriteLine("AI returned no report content.");
+            Console.WriteLine(ex.ToString());
             return;
         }
 
@@ -171,12 +174,15 @@ class Program
             Besides the final JSON, you should output no other information, text or thoughts about the quality of the report.
         """;
 
-        string result = await AIRunner.RunAI(systemMessage2, reportContent, requestEntity.IndexType, false);
+        string result;
 
-        if (string.IsNullOrWhiteSpace(result))
+        try
         {
+            result = await AIRunner.RunAI(systemMessage2, reportContent, requestEntity.IndexType, false);
+        } catch (Exception e)
+        {
+            Console.WriteLine(e.ToString());
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "No structured JSON returned by AI.");
-            Console.WriteLine("No structured JSON was returned.");
             return;
         }
 

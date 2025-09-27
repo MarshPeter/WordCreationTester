@@ -73,8 +73,7 @@ namespace WordCreationTester
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
-                return null;
+                throw new InvalidOperationException("AI was unable to generate response:", e);
             }
         }
 
