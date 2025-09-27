@@ -8,7 +8,6 @@
         public string? AssuranceProgram { get; set; }
         public int ProcessedYear { get; set; }
         public int ProcessedMonth { get; set; }
-        public string? ProcessedDate { get; set; }
         public string? QuestionText { get; set; }
         public string? QuestionIdentifier { get; set; }
         public string? Answer { get; set; }
