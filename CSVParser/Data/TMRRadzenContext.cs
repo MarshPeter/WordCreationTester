@@ -116,17 +116,11 @@ public partial class TMRRadzenContext : DbContext
 
     public virtual DbSet<AssuranceScheduleUser> AssuranceScheduleUsers { get; set; }
 
-    //public virtual DbSet<AssuranceSubmissionLog> AssuranceSubmissionLogs { get; set; }
-
-    //public virtual DbSet<AssuranceSubmissionProcessed> AssuranceSubmissionProcesseds { get; set; }
-
     public virtual DbSet<AssuranceSubmissionProcessedComment> AssuranceSubmissionProcessedComments { get; set; }
 
     public virtual DbSet<AssuranceSubmissionProcessedGrouping> AssuranceSubmissionProcessedGroupings { get; set; }
 
     public virtual DbSet<AssuranceSubmissionProcessedResponsesDocsWeighting> AssuranceSubmissionProcessedResponsesDocsWeightings { get; set; }
-
-    //public virtual DbSet<AssuranceSubmissionProcessedResponsesStructured> AssuranceSubmissionProcessedResponsesStructureds { get; set; }
 
     public virtual DbSet<AssuranceSubmissionProcessedResponsesUnStructured> AssuranceSubmissionProcessedResponsesUnStructureds { get; set; }
 
