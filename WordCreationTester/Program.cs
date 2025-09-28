@@ -132,7 +132,7 @@ class Program
         // Run AI
         await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "AI report generation started.");
 
-        string systemMessage = """
+        string reportGenerationSystemMessage = """
             You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
             With this report, you should create a title for the report that is derived from the original messsage. 
             This should mean that your report is in the format of:
@@ -153,7 +153,7 @@ class Program
 
         try
         {
-            reportContent = await AIRunner.RunAI(systemMessage, userMessage, requestEntity.IndexType);
+            reportContent = await AIRunner.RunAI(reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
 
         } catch (Exception ex)
         {
@@ -165,7 +165,7 @@ class Program
         Console.WriteLine("AI Report:");
         Console.WriteLine(reportContent);
 
-        string systemMessage2 = """
+        string jsonGenerationSystemMessage = """
             Your sole duty is to estimate from these reports what are headers, paragraphs and dot points and to return the report in a array JSON Format that follows this layout exactly:
 
             [
@@ -199,7 +199,7 @@ class Program
 
         try
         {
-            result = await AIRunner.RunAI(systemMessage2, reportContent, requestEntity.IndexType, false);
+            result = await AIRunner.RunAI(jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
         } catch (Exception e)
         {
             Console.WriteLine(e.ToString());
