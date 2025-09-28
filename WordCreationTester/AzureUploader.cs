@@ -5,9 +5,9 @@ namespace WordCreationTester
 {
     public static class AzureUploader
     {
-        public static async Task<string> UploadReportAsync(string filePath, string blobName)
+        public static async Task<string> UploadReportAsync(string filePath, string blobName, AIConfig config)
         {
-            string connectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
+            string connectionString = config.BlobConnectionString;
 
             if (string.IsNullOrEmpty(connectionString))
                 throw new InvalidOperationException("Azure Storage connection string is not set.");
