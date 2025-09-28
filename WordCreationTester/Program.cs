@@ -221,7 +221,7 @@ class Program
 
         string filePath = $"{docsDirectory}/Generated.docx";
         string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
-        var blobUrl = await AzureUploader.UploadReportAsync(filePath, blobName);
+        var blobUrl = await AzureUploader.UploadReportAsync(filePath, blobName, config);
 
         // Save results back into DB
         dbContext.AIReportResults.Add(new AIReportResultEntity
