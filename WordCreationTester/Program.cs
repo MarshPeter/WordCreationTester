@@ -6,6 +6,8 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        var config = AIConfig.FromEnvironment();
+
         string userMessage1 = "Show me a summary of all comments made about medication safety.";
 
         // Create payload
@@ -42,11 +44,11 @@ class Program
         };
 
         Console.WriteLine("Simulating Service Bus processor...");
-        await SimulateMessageProcessor(minimalMessage);
+        await SimulateMessageProcessor(minimalMessage, config);
     }
 
     // Processor receives message, fetches payload, runs AI, saves result
-    private static async Task SimulateMessageProcessor(ServiceBusRequestMessage minimalMessage)
+    private static async Task SimulateMessageProcessor(ServiceBusRequestMessage minimalMessage, AIConfig  config)
     {
         Console.WriteLine("Processor received message.");
         Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
@@ -153,7 +155,7 @@ class Program
 
         try
         {
-            reportContent = await AIRunner.RunAI(reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
+            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
 
         } catch (Exception ex)
         {
@@ -199,7 +201,7 @@ class Program
 
         try
         {
-            result = await AIRunner.RunAI(jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
+            result = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
         } catch (Exception e)
         {
             Console.WriteLine(e.ToString());

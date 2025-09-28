@@ -9,21 +9,19 @@ namespace WordCreationTester
 {
     public static class AIRunner
     {
-        public static async Task<string> RunAI(string systemMessage, string userMessage, string searchIndex, bool dataSource = true)
+        public static async Task<string> RunAI(
+            AIConfig config,
+            string systemMessage,
+            string userMessage,
+            string searchIndex,
+            bool dataSource = true)
         {
-            string AI_endpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT") ?? "https://<your-resource-name>.openai.azure.com/";
-            string AI_key = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "<your-key>";
-            string searchEndpoint = Environment.GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
-            string searchKey = Environment.GetEnvironmentVariable("AZURE_SEARCH_API_KEY") ?? "<your-search-api-key>";
-            
-            
-           
 
             try
             {
                 var openAIClient = new AzureOpenAIClient(
-                    new Uri(AI_endpoint),
-                    new AzureKeyCredential(AI_key)
+                    new Uri(config.AIEndpoint),
+                    new AzureKeyCredential(config.AIKey)
                 );
 
                 var chatClient = openAIClient.GetChatClient("gpt-4o-mini");
@@ -32,7 +30,7 @@ namespace WordCreationTester
 
                 if (dataSource)
                 {
-                    options.AddDataSource(retrieveDataSource(searchEndpoint, searchKey, searchIndex));
+                    options.AddDataSource(retrieveDataSource(config.SearchEndpoint, config.SearchKey, searchIndex));
                 }
 
 #pragma warning restore AOAI001 // Suppress the diagnostic warning
