@@ -13,9 +13,6 @@ namespace WordCreationTester
         public string? ReportType { get; set; }
         public List<string>? ReportCategories { get; set; }
         public required List<ReportStatement> ReportStatements { get; set; }
-        //public bool IncludeAttachment { get; set; }
-        //public string AttachmentId { get; set; }
-        //public Uri AttachmentUrl { get; set; }
         public required string IndexType { get; set; }
     }
 
