@@ -24,7 +24,7 @@ namespace CsvParser.Services
         private readonly AppSettings _settings;
 
 
-        // Constructor: initializes the service with DB context, logger, and application settings
+        // initializes the service with DB context, logger, and application settings
         public IndexCreatorService(
             TMRRadzenContext dbContext,
             ILogger<ICSVExporter> logger,
@@ -43,7 +43,7 @@ namespace CsvParser.Services
             string skillsetName = $"{indexName}-skillset";
             string indexerName = $"{indexName}-indexer";
             string resourceGroup = "TMRRadzen";
-            // Blob storage configuration
+
             string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
             string containerName = "reports";
             // Azure OpenAI configuration
@@ -246,14 +246,14 @@ namespace CsvParser.Services
 
             using var httpClient = new HttpClient();
 
-            // Set the Authorization header
+            // Add auth header and send data source payload to Azure Search
             httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token.Token);
 
-            // Set the Content-Type header
+
             var content = new StringContent(dataSourcePayload, Encoding.UTF8, "application/json");
 
-            // Send the request
+
             var response = await httpClient.PostAsync(endpoint, content);
 
             if (response.IsSuccessStatusCode)
@@ -270,7 +270,7 @@ namespace CsvParser.Services
                 return false;
             }
         }
-
+        // CreateIndexerAsync creates an Azure Cognitive Search indexer to pull data from a data source
         public static async Task<bool> CreateSkillsetAsync(
         string searchServiceName,
         string skillsetName,
@@ -279,6 +279,10 @@ namespace CsvParser.Services
         string indexName)
         {
             string endpoint = $"https://{searchServiceName}.search.windows.net/skillsets/{skillsetName}?api-version=2024-07-01";
+
+
+            // JSON payload for skillset: splits documents into chunks, generates embeddings with OpenAI, 
+            // and projects results (chunk, title, vector) into the target index
             string skillsetPayload = $@"
 {{
   ""name"": ""{skillsetName}"",
@@ -363,7 +367,7 @@ namespace CsvParser.Services
   }}
 }}
 ";
-
+            // Create HTTP client and send skillset payload to Azure Search
             using var client = await AzureSearchHttpClientFactory.CreateAsync();
             var content = new StringContent(skillsetPayload, Encoding.UTF8, "application/json");
 
@@ -380,7 +384,7 @@ namespace CsvParser.Services
                 return false;
             }
         }
-
+        // Create a new Azure Search index with text fields, vector search, and semantic config
         public static async Task<bool> CreateIndexAsync(
         string searchServiceName,
         string indexName,
@@ -393,6 +397,7 @@ namespace CsvParser.Services
             var vectorizerName = $"{indexName}-azureOpenAi-text-vectorizer";
             var semanticName = $"{indexName}-semantic-configuration";
             // Some of this will need to be updated to be more general eventually. It has a bit too much hard coding atm. 
+            // Define index schema and configuration (fields, semantic settings, vector search with OpenAI)
             string indexPayload = $@"
 {{
   ""name"": ""{indexName}"",
@@ -522,6 +527,7 @@ namespace CsvParser.Services
   }}
 }}
 ";
+            // Send index payload to Azure Search and log success/failure
             using var client = await AzureSearchHttpClientFactory.CreateAsync();
             var content = new StringContent(indexPayload, Encoding.UTF8, "application/json");
             var response = await client.PutAsync(endpoint, content);
@@ -539,6 +545,7 @@ namespace CsvParser.Services
         }
 
 
+        // Create an indexer that connects a data source, skillset, and target index
         public static async Task<bool> CreateIndexerAsync(
             string searchServiceName,
             string indexerName,
