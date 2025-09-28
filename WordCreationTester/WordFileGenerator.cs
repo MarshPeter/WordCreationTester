@@ -17,7 +17,7 @@ namespace WordCreationTester
             _currentSectionAlreadyHasRun = false;
         }
 
-        public void addTitle(string text)
+        public void addTitle(string text, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
@@ -25,7 +25,8 @@ namespace WordCreationTester
 
             p.AddRun(new Run
             {
-                Text = text
+                Text = text,
+                FontFamily = font
             });
 
             _body.AppendChild(p);
