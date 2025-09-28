@@ -42,7 +42,7 @@ namespace CsvParser.Services
             string dataSourceName = $"{indexName}-data-source";
             string skillsetName = $"{indexName}-skillset";
             string indexerName = $"{indexName}-indexer";
-            string resourceGroup = "TMRRadzen";
+            
 
             string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
             string containerName = "reports";
