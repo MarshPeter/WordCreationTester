@@ -7,7 +7,9 @@ namespace WordCreationTester
     {
         public static async Task LogStatusAsync(Guid aiRequestId, string status, string description)
         {
-            using var dbContext = new PayloadDbConnection();
+            var config = AIConfig.FromEnvironment();
+
+            using var dbContext = new PayloadDbConnection(config);
 
             var request = await dbContext.AIReportRequests.FindAsync(aiRequestId);
             if (request == null)

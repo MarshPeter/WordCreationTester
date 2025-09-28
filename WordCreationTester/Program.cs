@@ -55,7 +55,7 @@ class Program
 
         await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, "Processing", "Message received for processing.");
 
-        using var dbContext = new PayloadDbConnection();
+        using var dbContext = new PayloadDbConnection(config);
 
         // Fetch full request from DB
         var requestEntity = await dbContext.AIReportRequests

@@ -7,6 +7,8 @@ namespace WordCreationTester
     {
         public static async Task ProcessPayloadAsync(AIReportRequestPayload payload)
         {
+            var config = AIConfig.FromEnvironment();
+
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
 
@@ -19,7 +21,7 @@ namespace WordCreationTester
             try
             {
                 // --- Save payload to Database ---
-                using (var dbContext = new PayloadDbConnection())
+                using (var dbContext = new PayloadDbConnection(config))
                 {
                     var entity = new AIReportRequestEntity
                     {

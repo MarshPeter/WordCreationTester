@@ -1,4 +1,6 @@
-﻿namespace WordCreationTester
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+
+namespace WordCreationTester
 {
     public class AIConfig
     {
@@ -7,8 +9,9 @@
         public string SearchEndpoint { get; }
         public string SearchKey { get; }
         public string BlobConnectionString { get; }
+        public string DbConnectionString { get; }
 
-        public AIConfig(string aiEndpoint, string aiKey, string searchEndpoint, string searchKey, string blobConnectionString)
+        public AIConfig(string aiEndpoint, string aiKey, string searchEndpoint, string searchKey, string blobConnectionString, string dbConnectionString)
         {
             AIEndpoint = !string.IsNullOrWhiteSpace(aiEndpoint) ? aiEndpoint
                 : throw new ArgumentException("AI endpoint is required", nameof(aiEndpoint));
@@ -24,6 +27,9 @@
 
             BlobConnectionString = !string.IsNullOrWhiteSpace(blobConnectionString) ? blobConnectionString
                 : throw new ArgumentException("Blob connection string is required", nameof(blobConnectionString));
+
+            DbConnectionString = !string.IsNullOrWhiteSpace(dbConnectionString) ? dbConnectionString
+                : throw new ArgumentException("DB connection string is required", nameof(dbConnectionString));
         }
 
         // Factory method for creating config from environment variables
@@ -37,7 +43,9 @@
             Environment.GetEnvironmentVariable("AZURE_SEARCH_API_KEY")
                 ?? throw new InvalidOperationException("Missing AZURE_SEARCH_API_KEY"),
             Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING")
-                ?? throw new InvalidOperationException("Missing BLOB_STORAGE_CONNECTION_STRING")
+                ?? throw new InvalidOperationException("Missing BLOB_STORAGE_CONNECTION_STRING"),
+            Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                ?? throw new InvalidOperationException("Missing DB_CONNECTION_STRING")
         );
 
     }
