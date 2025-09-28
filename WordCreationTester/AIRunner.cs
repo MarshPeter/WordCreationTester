@@ -67,7 +67,7 @@ namespace WordCreationTester
 
                 ChatCompletion completion = await chatClient.CompleteChatAsync(messages, options);
 
-                // Console.WriteLine(completion.Content[0].Text);
+                
 
                 return completion.Content[0].Text;
             }
