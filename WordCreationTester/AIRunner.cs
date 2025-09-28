@@ -15,10 +15,9 @@ namespace WordCreationTester
             string AI_key = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "<your-key>";
             string searchEndpoint = Environment.GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
             string searchKey = Environment.GetEnvironmentVariable("AZURE_SEARCH_API_KEY") ?? "<your-search-api-key>";
-            //var searchIndex = "my-index";
             
-            Console.WriteLine(searchEndpoint);
-            Console.WriteLine(searchKey);
+            
+           
 
             try
             {
