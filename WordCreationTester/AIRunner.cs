@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
-using Azure.Core;
-using Azure.Identity;
-using Azure.Search.Documents.Indexes.Models;
+
 using OpenAI.Chat;
 
 namespace WordCreationTester
