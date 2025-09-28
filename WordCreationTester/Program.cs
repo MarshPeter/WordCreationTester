@@ -90,18 +90,27 @@ class Program
         }
 
         /*
-      Build AI user message:
-
-      This message tells the AI what report to generate. Each part is included for a reason:
-
-      - Date From/Date To: the report time range
-      - Search query seed: keywords to help find relevant info
-      - Categories: topics to include
-      - ReportType: type of report
-      - IndexType: which data source to use
-
-      This helps future developers understand why each section is needed.
-  */
+         * Building the AI message
+         * This message provides the AI with a structured prompt that includes all the necessary context for generating a meaningful report.
+         * 
+         * - Date From / Date To:
+         *      Defines the reporting period for AI to only grab data from these dates.
+         *      
+         * - Search query seed (for retrieval):
+         *      Defines the basis for AI retrieval and context, ensuring the report focuses on the statements the user has specified.
+         *      
+         * - Categories:
+         *      Defines the thematic focus of the report (e.g. Medication Safety, Infection Control)
+         *      This ensures the AI includes information around the specified categories and draws a clear focus on them.
+         *      
+         * - Report Type:
+         *      Tells the AI what style or format the report should take (e.g. summary, risk analysis, assurance report)
+         *      This is essential for aligning output with user's report expectations.
+         *      
+         * - Index Type:
+         *      Defines which index to reference for data collection.
+         * 
+        */
         string userMessage = $@"
             Using the following information, generate a detailed report.
 
