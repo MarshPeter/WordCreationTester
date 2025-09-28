@@ -56,7 +56,7 @@ namespace CsvParser
                 var indexer = host.Services.GetRequiredService<IndexCreatorService>();
                 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
-                logger.LogInformation("Starting CSV export process...");
+                logger.LogInformation("Starting CSV export process for {tenant_Id}...", tenantId);
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
@@ -84,11 +84,13 @@ namespace CsvParser
 
                 await indexer.UpdateDatabaseIndexInformation(indexes, tenantId);
 
+                logger.LogInformation("Index creation for {tenant_id} has completed succesfully", tenantId);
+
             }
             catch (Exception ex)
             {
                 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "An error occurred during CSV processing");
+                logger.LogError(ex, "An error occurred during CSV processing for {tenant_id}", tenantId);
                 Environment.Exit(1);
             }
         }
