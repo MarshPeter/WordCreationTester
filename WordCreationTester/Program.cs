@@ -1,6 +1,7 @@
-﻿using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using WordCreationTester;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class Program
 {
@@ -8,47 +9,16 @@ class Program
     {
         var config = AIConfig.FromEnvironment();
 
-        string userMessage1 = "Show me a summary of all comments made about medication safety.";
+        // TODO: Get the MinimalPayload from the actual API call - this has to wait until we are moving to the actual code file. 
 
-        // Create payload
-        var payload = new AIReportRequestPayload
-        {
-            TenantId = Guid.NewGuid(),
-            AIRequestId = Guid.NewGuid(),
+        // This is a test payload, replaces the actual API call for testing. Uncomment this if you want to test with known quantities. 
+        var minimalMessage = await TestPayload();
 
-            CreatedBy = "test.user@example.com",
-            DateFrom = new DateTime(2020, 01, 01),
-            DateTo = DateTime.UtcNow.Date,
-
-            ReportType = "Compliance Assurance Report",
-            ReportCategories = new List<string> { "Medication Safety", "Infection Control" },
-            ReportStatements = new List<ReportStatement>
-            {
-                new ReportStatement { Text = userMessage1 },
-                new ReportStatement { Text = "Evaluate medication handling compliance in the last 12 months." },
-                new ReportStatement { Text = "Identify gaps in infection control processes across departments." }
-            },
-            IndexType = "my-index",
-        };
-
-        Console.WriteLine($"Created payload with AIRequestId: {payload.AIRequestId}");
-
-        // Save payload to DB + send minimal message (via PayloadProcessor)
-        await PayloadProcessor.ProcessPayloadAsync(payload);
-
-        // Simulate receiving the message from Service Bus
-        var minimalMessage = new ServiceBusRequestMessage
-        {
-            TenantId = payload.TenantId,
-            AIRequestId = payload.AIRequestId
-        };
-
-        Console.WriteLine("Simulating Service Bus processor...");
-        await SimulateMessageProcessor(minimalMessage, config);
+        await GenerateReport(minimalMessage, config);
     }
 
     // Processor receives message, fetches payload, runs AI, saves result
-    private static async Task SimulateMessageProcessor(ServiceBusRequestMessage minimalMessage, AIConfig config)
+    private static async Task GenerateReport(ServiceBusRequestMessage minimalMessage, AIConfig config)
     {
         Console.WriteLine("Processor received message.");
         Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
@@ -79,10 +49,6 @@ class Program
         {
             statements = new List<string> { "Generate a report" };
         }
-
-        //string statementsText = string.Join(Environment.NewLine,
-        //    statements.Select((t, i) => $"{i + 1}. {t}")
-        //);
 
         // Extract categories
         var categories = new List<string>();
@@ -248,5 +214,46 @@ class Program
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "Word document generation/upload failed.");
             return;
         }
+    }
+
+    private static async Task<ServiceBusRequestMessage> TestPayload()
+    {
+
+        Console.WriteLine("Simulating Service Bus processor...");
+
+        string userMessage = "Show me a summary of all comments made about medication safety.";
+
+        // Create fake payload
+        var payload = new AIReportRequestPayload
+        {
+            TenantId = Guid.NewGuid(),
+            AIRequestId = Guid.NewGuid(),
+
+            CreatedBy = "test.user@example.com",
+            DateFrom = new DateTime(2020, 01, 01),
+            DateTo = DateTime.UtcNow.Date,
+
+            ReportType = "Compliance Assurance Report",
+            ReportCategories = new List<string> { "Medication Safety", "Infection Control" },
+            ReportStatements = new List<ReportStatement>
+            {
+                new ReportStatement { Text = userMessage },
+                new ReportStatement { Text = "Evaluate medication handling compliance in the last 12 months." },
+                new ReportStatement { Text = "Identify gaps in infection control processes across departments." }
+            },
+            IndexType = "my-index",
+        };
+
+        Console.WriteLine($"Created payload with AIRequestId: {payload.AIRequestId}");
+
+        // Save payload to DB + send minimal message (via PayloadProcessor)
+        await PayloadProcessor.ProcessPayloadAsync(payload);
+
+        // Simulate receiving the message from Service Bus
+        return new ServiceBusRequestMessage
+        {
+            TenantId = payload.TenantId,
+            AIRequestId = payload.AIRequestId
+        };
     }
 }
