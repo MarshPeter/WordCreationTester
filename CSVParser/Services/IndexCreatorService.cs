@@ -21,14 +21,14 @@ namespace CsvParser.Services
     {
         private readonly TMRRadzenContext _dbContext;
         private readonly ILogger<ICSVExporter> _logger;
-        private readonly AppSettings _settings;
+        private readonly AIConfig _settings;
 
 
         // initializes the service with DB context, logger, and application settings
         public IndexCreatorService(
             TMRRadzenContext dbContext,
             ILogger<ICSVExporter> logger,
-            IOptions<AppSettings> settings)
+            IOptions<AIConfig> settings)
         {
             _dbContext = dbContext;
             _logger = logger;
@@ -42,13 +42,13 @@ namespace CsvParser.Services
             string dataSourceName = $"{indexName}-data-source";
             string skillsetName = $"{indexName}-skillset";
             string indexerName = $"{indexName}-indexer";
-            
 
-            string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
+
+            string blobConnectionString = _settings.BlobConnectionString;
             string containerName = "reports";
             // Azure OpenAI configuration
-            string openAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-            string openAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+            string openAIEndpoint = _settings.LLMAIEndpoint;
+            string openAIKey = _settings.LLMAIKey;
 
             
             //THE FOLLOWING CODE IS AN EXAMPLE OF INDEXING CREATION

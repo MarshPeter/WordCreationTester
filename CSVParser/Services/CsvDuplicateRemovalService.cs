@@ -10,11 +10,11 @@ namespace CsvParser.Services
     public class CsvDuplicateRemovalService
     {
         private readonly ILogger<CsvDuplicateRemovalService> _logger;
-        private readonly AppSettings _settings;
+        private readonly AIConfig _settings;
 
         public CsvDuplicateRemovalService(
             ILogger<CsvDuplicateRemovalService> logger,
-            IOptions<AppSettings> settings)
+            IOptions<AIConfig> settings)
         {
             _logger = logger;
             _settings = settings.Value;

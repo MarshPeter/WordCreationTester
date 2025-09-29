@@ -8,9 +8,9 @@ namespace CsvParser.Services
     public class AzureUploadService
     {
         private readonly ILogger<AzureUploadService> _logger;
-        private readonly AppSettings _settings;
+        private readonly AIConfig _settings;
 
-        public AzureUploadService(ILogger<AzureUploadService> logger, IOptions<AppSettings> settings)
+        public AzureUploadService(ILogger<AzureUploadService> logger, IOptions<AIConfig> settings)
         {
             _logger = logger;
             _settings = settings.Value;
@@ -18,8 +18,7 @@ namespace CsvParser.Services
 
         public async Task UploadFileAsync(string filePath, string blobName, string indexName)
         {
-            string connectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING")
-                ?? throw new InvalidOperationException("BLOB_STORAGE_CONNECTION_STRING environment variable is not set");
+            string connectionString = _settings.BlobConnectionString;
 
             var blobServiceClient = new BlobServiceClient(connectionString);
             var containerClient = blobServiceClient.GetBlobContainerClient(_settings.BlobContainerBaseName);

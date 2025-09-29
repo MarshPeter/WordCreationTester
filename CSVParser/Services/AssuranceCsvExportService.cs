@@ -14,12 +14,12 @@ namespace CsvParser.Services
     {
         private readonly TMRRadzenContext _dbContext;
         private readonly ILogger<ICSVExporter> _logger;
-        private readonly AppSettings _settings;
+        private readonly AIConfig _settings;
 
         public AssuranceCsvExportService(
             TMRRadzenContext dbContext,
             ILogger<ICSVExporter> logger,
-            IOptions<AppSettings> settings)
+            IOptions<AIConfig> settings)
         {
             _dbContext = dbContext;
             _logger = logger;
