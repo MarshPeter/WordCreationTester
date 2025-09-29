@@ -17,6 +17,7 @@ namespace CsvParser
 
             // Read as nullable, then validate
             string? tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
+
             if (string.IsNullOrWhiteSpace(tenantId))
             {
                 var bootLogger = host.Services.GetRequiredService<ILogger<Program>>();
@@ -142,11 +143,12 @@ namespace CsvParser
                 .ConfigureServices((context, services) =>
                 {
                     // Configuration
-                    services.Configure<AppSettings>(context.Configuration.GetSection("AppSettings"));
+                    services.Configure<AIConfig>(context.Configuration.GetSection("AIConfig"));
 
                     // Database
                     services.AddDbContext<TMRRadzenContext>(options =>
-                        options.UseSqlServer(Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")));
+                        options.UseSqlServer(Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING"))); // This needs to be set here regardless of AIConfig.cs setup
+
 
                     // Services
                     services.AddScoped<AssuranceCsvExportService>();

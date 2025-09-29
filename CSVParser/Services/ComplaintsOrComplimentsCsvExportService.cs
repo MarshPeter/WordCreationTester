@@ -14,12 +14,12 @@ namespace CsvParser.Services
     {
         private readonly TMRRadzenContext _dbContext;
         private readonly ILogger<ComplaintsOrComplimentsCsvExportService> _logger;
-        private readonly AppSettings _settings;
+        private readonly AIConfig _settings;
 
         public ComplaintsOrComplimentsCsvExportService(
             TMRRadzenContext dbContext,
             ILogger<ComplaintsOrComplimentsCsvExportService> logger,
-            IOptions<AppSettings> settings)
+            IOptions<AIConfig> settings)
         {
             _dbContext = dbContext;
             _logger = logger;
