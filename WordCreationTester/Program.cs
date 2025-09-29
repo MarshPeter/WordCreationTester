@@ -48,7 +48,7 @@ class Program
     }
 
     // Processor receives message, fetches payload, runs AI, saves result
-    private static async Task SimulateMessageProcessor(ServiceBusRequestMessage minimalMessage, AIConfig  config)
+    private static async Task SimulateMessageProcessor(ServiceBusRequestMessage minimalMessage, AIConfig config)
     {
         Console.WriteLine("Processor received message.");
         Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
@@ -157,15 +157,13 @@ class Program
         {
             reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
 
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "AI returned no report content.");
             Console.WriteLine(ex.ToString());
             return;
         }
-
-        Console.WriteLine("AI Report:");
-        Console.WriteLine(reportContent);
 
         string jsonGenerationSystemMessage = """
             Your sole duty is to estimate from these reports what are headers, paragraphs and dot points and to return the report in a array JSON Format that follows this layout exactly:
@@ -202,8 +200,11 @@ class Program
         try
         {
             result = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
+            Console.WriteLine("JSON translation failed. Raw AI report:");
+            Console.WriteLine(reportContent); // Only show the AI report if structured JSON step fails
             Console.WriteLine(e.ToString());
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "No structured JSON returned by AI.");
             return;
