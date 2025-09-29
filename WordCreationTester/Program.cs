@@ -210,36 +210,43 @@ class Program
             return;
         }
 
-        Console.WriteLine("Structured JSON:");
-        Console.WriteLine(result);
-
-        // Save Word doc + upload to Blob
-        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
-
-        string docsDirectory = "./docs";
-        Directory.CreateDirectory(docsDirectory);
-        ReportCreator.runGeneration(result);
-
-        string filePath = $"{docsDirectory}/Generated.docx";
-        string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
-        var blobUrl = await AzureUploader.UploadReportAsync(filePath, blobName, config);
-
-        // Save results back into DB
-        dbContext.AIReportResults.Add(new AIReportResultEntity
+        try
         {
-            TenantId = requestEntity.TenantId,
-            AIRequestId = requestEntity.AIRequestId,
-            ReportName = blobName,
-            ReportBlobUrl = blobUrl.ToString(),
-            Status = "Complete",
-            CompletedAt = DateTime.Now
-        });
+            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
 
-        requestEntity.Status = "Completed";
-        await dbContext.SaveChangesAsync();
+            string docsDirectory = "./docs";
+            Directory.CreateDirectory(docsDirectory);
+            ReportCreator.runGeneration(result);
 
-        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Completed", $"Report generated successfully and uploaded. URL={blobUrl}");
+            string filePath = $"{docsDirectory}/Generated.docx";
+            string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
+            var blobUrl = await AzureUploader.UploadReportAsync(filePath, blobName, config);
 
-        Console.WriteLine($"Report stored in DB, URL={blobUrl}");
+            // Save results back into DB
+            dbContext.AIReportResults.Add(new AIReportResultEntity
+            {
+                TenantId = requestEntity.TenantId,
+                AIRequestId = requestEntity.AIRequestId,
+                ReportName = blobName,
+                ReportBlobUrl = blobUrl.ToString(),
+                Status = "Complete",
+                CompletedAt = DateTime.Now
+            });
+
+            requestEntity.Status = "Completed";
+            await dbContext.SaveChangesAsync();
+
+            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Completed", $"Report generated successfully and uploaded. URL={blobUrl}");
+
+            Console.WriteLine($"Report stored in DB, URL={blobUrl}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Word generation/upload failed. Structured JSON:");
+            Console.WriteLine(result); // Only show JSON if Word doc generation/upload fails
+            Console.WriteLine(e.ToString());
+            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "Word document generation/upload failed.");
+            return;
+        }
     }
 }
