@@ -70,36 +70,51 @@ namespace CsvParser.Services
                 return false;
             }
 
-            //// 3.Create Index
+            //// 2.Create Index
             bool indexCreated = await CreateIndexAsync(searchServiceName, indexName, openAIEndpoint, openAIKey);
 
             if (!indexCreated)
             {
                 Console.WriteLine($@"The index {dataSourceName} was not created in {searchServiceName}");
+
+                // Clean up already created resources so that it doesn't prevent future index creation
+                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
+
                 return false;
             }
 
-            //// 2.Create Skillset
+            //// 3.Create Skillset
             bool skillsetCreated = await CreateSkillsetAsync(searchServiceName, skillsetName, openAIEndpoint, openAIKey, indexName);
 
             if (!skillsetCreated)
             {
                 Console.WriteLine($@"The skillset {dataSourceName} was not created in {searchServiceName}");
+
+                // Clean up already created resources so that it doesn't prevent future index creation
+                await DeleteIndexAsync(searchServiceName, indexName);
+                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
+
                 return false;
             }
 
 
             //// 4.Create Indexer
             bool indexerCreated = await CreateIndexerAsync(
-                searchServiceName,
+               searchServiceName,
                indexerName,
                dataSourceName,
                skillsetName,
                indexName);
 
-            if (!skillsetCreated)
+            if (!indexerCreated)
             {
                 Console.WriteLine($@"The indexer {dataSourceName} was not created in {searchServiceName}");
+
+                // Clean up already created resources so that it doesn't prevent future index creation
+                await DeleteIndexAsync(searchServiceName, indexName);
+                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
+                await DeleteSkillsetAsync(searchServiceName, skillsetName);
+
                 return false;
             }
 
@@ -597,5 +612,87 @@ namespace CsvParser.Services
                 return false;
             }
         }
+
+        // Deletes the index. Use only if we need to rollback due to a failed index creation
+        public static async Task<bool> DeleteIndexAsync(string searchServiceName, string indexName)
+        {
+            string endpoint = $"https://{searchServiceName}.search.windows.net/indexes/{indexName}?api-version=2024-07-01";
+
+            using var client = await AzureSearchHttpClientFactory.CreateAsync();
+            var response = await client.DeleteAsync(endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Index {indexName} deleted successfully.");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete index {indexName}: {await response.Content.ReadAsStringAsync()}");
+                return false;
+            }
+        }
+
+        // Deletes the Data Source. Use only if we need to rollback due to a failed index creation
+        public static async Task<bool> DeleteDataSourceAsync(string searchServiceName, string dataSourceName)
+        {
+            string endpoint = $"https://{searchServiceName}.search.windows.net/datasources/{dataSourceName}?api-version=2024-07-01";
+
+            using var client = await AzureSearchHttpClientFactory.CreateAsync();
+            var response = await client.DeleteAsync(endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Data source {dataSourceName} deleted successfully.");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete data source {dataSourceName}: {await response.Content.ReadAsStringAsync()}");
+                return false;
+            }
+        }
+
+        // Deletes the skillset. Use only if we need to rollback due to a failed index creation
+        public static async Task<bool> DeleteSkillsetAsync(string searchServiceName, string skillsetName)
+        {
+            string endpoint = $"https://{searchServiceName}.search.windows.net/skillsets/{skillsetName}?api-version=2024-07-01";
+
+            using var client = await AzureSearchHttpClientFactory.CreateAsync();
+            var response = await client.DeleteAsync(endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Skillset {skillsetName} deleted successfully.");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete skillset {skillsetName}: {await response.Content.ReadAsStringAsync()}");
+                return false;
+            }
+        }
+
+        // Deletes the Indexer. Isn't currently used in production, but left here in case it is desired in some other fashion. 
+        public static async Task<bool> DeleteIndexerAsync(string searchServiceName, string indexerName)
+        {
+            string endpoint = $"https://{searchServiceName}.search.windows.net/indexers/{indexerName}?api-version=2024-07-01";
+
+            using var client = await AzureSearchHttpClientFactory.CreateAsync();
+            var response = await client.DeleteAsync(endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Indexer {indexerName} deleted successfully.");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete indexer {indexerName}: {await response.Content.ReadAsStringAsync()}");
+                return false;
+            }
+        }
     }
+
+
 }
