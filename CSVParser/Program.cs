@@ -61,11 +61,15 @@ namespace CsvParser
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
+
+                // it goes through each index, creates a CSV  and removes duplicates,
+                //uploads the finished file to Azure, then deletes the local copies so nothing is left behind. 
                 foreach (var idx in indexes)
                 {
                     string csvPath = await idx.ExportService.ExportCSV(idx.IndexName, timestamp);
                     logger.LogInformation($"{idx.IndexName} CSV created at: {csvPath}");
 
+                   // remove duplicate files from CSV
                     string finalCsvPath = await ProcessCsvForDuplicates(
                         csvPath,
                         duplicateRemovalService,
@@ -74,15 +78,18 @@ namespace CsvParser
                     );
                     logger.LogInformation("Duplicates removed from {index_name}", idx.IndexName);
 
+                    //upload cleaned CSV to Azure
                     string assuranceBlobName = Path.GetFileName(finalCsvPath);
                     await azureUploadService.UploadFileAsync(finalCsvPath, assuranceBlobName, idx.IndexName);
                     logger.LogInformation("{index_name} CSV uploaded as: {assurance_blob_name}", idx.IndexName, assuranceBlobName);
 
+                  // delete temporary local files
                     File.Delete(finalCsvPath);
                     File.Delete(csvPath);
                     logger.LogInformation("Local leftover CSV files have been removed");
                 }
 
+                //update index info in the database
                 await indexer.UpdateDatabaseIndexInformation(indexes, tenantId);
 
                 logger.LogInformation("Index creation for {tenant_id} has completed succesfully", tenantId);
