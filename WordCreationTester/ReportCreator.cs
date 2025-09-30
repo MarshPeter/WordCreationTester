@@ -20,8 +20,13 @@ namespace WordCreationTester
 
             try
             {
-                // Deserialize the JSON string into a Report object
-                List<ReportSegment> report = JsonConvert.DeserializeObject<List<ReportSegment>>(jsonString);
+                // Deserialize the report. If parsing returns null, default to an empty list .
+                var report = JsonConvert.DeserializeObject<List<ReportSegment>>(jsonString) ?? new List<ReportSegment>();
+
+                // If the parsed report is empty, throw InvalidOperationException to signal unusable input.
+                if (report.Count == 0)
+                    throw new System.InvalidOperationException("No report sections were provided.");
+
 
 
 
