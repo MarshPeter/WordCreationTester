@@ -23,6 +23,8 @@ namespace WordCreationTester
                 // Deserialize the JSON string into a Report object
                 List<ReportSegment> report = JsonConvert.DeserializeObject<List<ReportSegment>>(jsonString);
 
+
+
                 // Create a new Word document instance
                 var doc = new Document();
 
@@ -84,7 +86,7 @@ namespace WordCreationTester
             // Handle tables
             if (s.Type.Equals("table"))
             {
-                int nonHeaderCells = 0;
+                
                 if (s.Columns == null || s.Columns.Count == 0 ||
                     s.Rows == null || s.Rows.Count == 0)
                 {
