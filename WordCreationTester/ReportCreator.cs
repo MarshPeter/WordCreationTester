@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Openize.Words;
 
 namespace WordCreationTester
@@ -13,7 +10,8 @@ namespace WordCreationTester
             string docsDirectory = "./docs";
             string filename = "Generated.docx";
 
-            // Sanitize curly quotes into straight quotes in case AI disobeys instructions
+
+            // Sanitize curly quotes into smart quotes in case AI decides to be difficult and disobey instructions
             string jsonString = aiJson
                 .Replace('“', '"')
                 .Replace('”', '"')
@@ -22,20 +20,10 @@ namespace WordCreationTester
 
             try
             {
-                // Guard against empty/whitespace JSON coming from the AI
-                if (string.IsNullOrWhiteSpace(jsonString))
-                {
-                    throw new InvalidOperationException("AI JSON input was empty.");
-                }
+                // Deserialize the JSON string into a Report object
+                List<ReportSegment> report = JsonConvert.DeserializeObject<List<ReportSegment>>(jsonString);
 
-                // Deserialize the JSON string into a list of report segments
-                List<ReportSegment>? report = JsonConvert.DeserializeObject<List<ReportSegment>>(jsonString);
 
-                // ✅ WCTC001 fix: validate report before iterating
-                if (report == null || report.Count == 0)
-                {
-                    throw new InvalidOperationException("Report data is missing or invalid.");
-                }
 
                 // Create a new Word document instance
                 var doc = new Document();
@@ -52,24 +40,12 @@ namespace WordCreationTester
                 // Save the generated Word document to directory
                 doc.Save($"{docsDirectory}/{filename}");
             }
-            catch (Newtonsoft.Json.JsonReaderException jex)
-            {
-                // Save the invalid JSON to file for inspection
-                Directory.CreateDirectory(docsDirectory);
-                File.WriteAllText($"{docsDirectory}/last-bad-json.json", jsonString);
-
-                // Throw a clearer error message with location
-                throw new FileFormatException(
-                    $"Invalid JSON at {jex.Path} (line {jex.LineNumber}, pos {jex.LinePosition}). {jex.Message}",
-                    jex
-                );
-            }
             catch (System.Exception ex)
             {
                 throw new FileFormatException("An error occurred.", ex);
             }
-        }
 
+        }
         static void ParseSection(WordFileGenerator w, ReportSegment s)
         {
             // Add report title
@@ -110,7 +86,7 @@ namespace WordCreationTester
             // Handle tables
             if (s.Type.Equals("table"))
             {
-                ///int nonHeaderCells = 0;
+                
                 if (s.Columns == null || s.Columns.Count == 0 ||
                     s.Rows == null || s.Rows.Count == 0)
                 {
@@ -126,6 +102,7 @@ namespace WordCreationTester
                 for (int i = 0; i < s.Columns.Count(); i++)
                 {
                     w.addTableCell(s.Columns[i], fontWeight: "bold", 0, i);
+
                 }
 
                 // Add table data rows
@@ -136,7 +113,9 @@ namespace WordCreationTester
                         w.addTableCell(s.Rows[i][j], "normal", i, j);
                     }
                 }
+
             }
+
         }
     }
 }
