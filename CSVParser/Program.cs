@@ -61,9 +61,9 @@ namespace CsvParser
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
-               
-                // it goes through each index and make CSV clean it up by removing  duplicates, 
-                //upload the finished file to Azure, then delete the local copies so nothing is left behind. 
+
+                // it goes through each index, creates a CSV  and removes duplicates,
+                //uploads the finished file to Azure, then deletes the local copies so nothing is left behind. 
                 foreach (var idx in indexes)
                 {
                     string csvPath = await idx.ExportService.ExportCSV(idx.IndexName, timestamp);
