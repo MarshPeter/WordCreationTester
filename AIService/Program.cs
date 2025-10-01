@@ -9,11 +9,13 @@ string skillsetName = "my-skillset";
 string indexName = "my-index";
 string indexerName = "my-indexer";
 string resourceGroup = "TMRRadzen";
-string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING");
+string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING")
+    ?? throw new InvalidOperationException("Missing environment variable: BLOB_STORAGE_CONNECTION_STRING");
 string containerName = "documents";
-string openAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-string openAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
-
+string openAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
+    ?? throw new InvalidOperationException("Missing environment variable: AZURE_OPENAI_ENDPOINT");
+string openAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY")
+    ?? throw new InvalidOperationException("Missing environment variable: AZURE_OPENAI_KEY");
 //Uncomment this to work with the AIService Creator
 
 // await AIServiceCreator.createSearchResource(resourceGroup, searchServiceName);
