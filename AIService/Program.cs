@@ -8,7 +8,6 @@ string dataSourceName = "my-datasource";
 string skillsetName = "my-skillset";
 string indexName = "my-index";
 string indexerName = "my-indexer";
-string resourceGroup = "TMRRadzen";
 string blobConnectionString = Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING")
     ?? throw new InvalidOperationException("Missing environment variable: BLOB_STORAGE_CONNECTION_STRING");
 string containerName = "documents";
