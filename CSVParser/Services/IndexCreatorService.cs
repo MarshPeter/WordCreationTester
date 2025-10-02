@@ -129,16 +129,21 @@ namespace CsvParser.Services
 
             try
             {
+                // Get name of the indexes being created 
                 var indexNames = createdIndexes.Select(x => x.IndexName).ToList();
 
-                // 1. Get all AIReportIndexes for the given names
+                // Get existing AIReportIndexes that match the provided index names
+
                 var existingReportIndexes = await _dbContext.AIReportIndexes
                     .Where(r => indexNames.Contains(r.IndexName))
                     .ToListAsync(ct);
 
+                // Create a dictionary for quick lookup of existing report indexes by name
                 var reportIndexMap = existingReportIndexes.ToDictionary(r => r.IndexName, r => r);
 
-                // 2. Get all existing tenant-index mappings (join across all 3 tables)
+                // find existing tenant-to-index mappings by joining across AICSVDocuments, 
+                // AIReportTenantIndexes, and AIReportIndexes. This shows which indexes are already linked
+                // to the tenant's documents.
                 var existingMappings = await (
                     from doc in _dbContext.AICSVDocuments
                     join link in _dbContext.AIReportTenantIndexes on doc.Id equals link.AIDocumentId
@@ -151,10 +156,12 @@ namespace CsvParser.Services
                     }
                 ).ToListAsync(ct);
 
+                // Prepare lists for any new docs and tenant–index links we might need to create
                 var now = DateTime.UtcNow;
                 var newDocs = new List<AICSVDocuments>();
                 var newTenantIndexes = new List<AIReportTenantIndexes>();
 
+                // Go through each index we want to create
                 foreach (var indexDef in createdIndexes)
                 {
                     // --- AIReportIndexes ---
