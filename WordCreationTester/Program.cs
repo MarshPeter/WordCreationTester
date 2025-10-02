@@ -87,7 +87,8 @@ class Program
 
             Search query seed (for retrieval): {string.Join(" ", statements)}
 
-            Include information on these categories: {string.Join(", ", categories ?? new List<string>())}
+            {(categories != null && categories.Any() ? $"Include information on these categories: {string.Join(", ", categories)}" : "")}
+
 
             Generate a report of type: {requestEntity.ReportType}
             
