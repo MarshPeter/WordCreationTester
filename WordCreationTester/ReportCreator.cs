@@ -5,7 +5,7 @@ namespace WordCreationTester
 {
     public static class ReportCreator
     {
-        public static void runGeneration(string aiJson)
+        public static void RunGeneration(string aiJson)
         {
             string docsDirectory = "./docs";
             string filename = "Generated.docx";
