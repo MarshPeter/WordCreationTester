@@ -120,7 +120,8 @@ class Program
         string reportContent;
 
         try
-        { 
+        {
+            // Run the AI to generate the initial raw report content
             reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
 
         }
@@ -168,6 +169,8 @@ class Program
 
         try
         {
+            // Convert the AI report into a structured JSON format for further processing
+
             result = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
         }
         catch (Exception e)
@@ -183,6 +186,9 @@ class Program
 
         try
         {
+
+            // Generate the Word document from JSON and upload it to Azure Blob Storage
+
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
 
             string docsDirectory = "./docs";
