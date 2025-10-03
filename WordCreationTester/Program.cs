@@ -50,13 +50,6 @@ class Program
             statements = new List<string> { "Generate a report" };
         }
 
-        // Extract categories
-        var categories = new List<string>();
-        if (!string.IsNullOrWhiteSpace(requestEntity.ReportCategories))
-        {
-            categories = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportCategories);
-        }
-
         /*
          * Building the AI message
          * This message provides the AI with a structured prompt that includes all the necessary context for generating a meaningful report.
@@ -66,11 +59,7 @@ class Program
          *      
          * - Search query seed (for retrieval):
          *      Defines the basis for AI retrieval and context, ensuring the report focuses on the statements the user has specified.
-         *      
-         * - Categories:
-         *      Defines the thematic focus of the report (e.g. Medication Safety, Infection Control)
-         *      This ensures the AI includes information around the specified categories and draws a clear focus on them.
-         *      
+         *         
          * - Report Type:
          *      Tells the AI what style or format the report should take (e.g. summary, risk analysis, assurance report)
          *      This is essential for aligning output with user's report expectations.
@@ -87,16 +76,12 @@ class Program
 
             Search query seed (for retrieval): {string.Join(" ", statements)}
 
-            {(categories != null && categories.Any() ? $"Include information on these categories: {string.Join(", ", categories)}" : "")}
-
-
             Generate a report of type: {requestEntity.ReportType}
             
             Index Type: {requestEntity.IndexType}
 
         ";
 
-        Console.WriteLine(userMessage);
 
         // Run AI
         await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "AI report generation started.");
@@ -122,11 +107,15 @@ class Program
 
         try
         {
-            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
+            // Run the AI to generate the initial raw report content
+            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType, outputFormat: OutputFormat.PlainText);
 
         }
         catch (Exception ex)
         {
+            Console.WriteLine("AI report generation failed.");
+            Console.WriteLine("User message was:");
+            Console.WriteLine(userMessage);
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "AI returned no report content.");
             Console.WriteLine(ex.ToString());
             return;
@@ -162,16 +151,19 @@ class Program
             Besides the final JSON, you should output no other information, text or thoughts about the quality of the report.
         """;
 
-        string result;
+        string structuredJsonReport;
 
         try
         {
-            result = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
+            // Convert the AI report into a structured JSON format for further processing
+            structuredJsonReport = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false, outputFormat: OutputFormat.Json);
         }
         catch (Exception e)
         {
             Console.WriteLine("JSON translation failed. Raw AI report:");
             Console.WriteLine(reportContent); // Only show the AI report if structured JSON step fails
+            Console.WriteLine("User message was:");
+            Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "No structured JSON returned by AI.");
             return;
@@ -179,11 +171,14 @@ class Program
 
         try
         {
+
+            // Generate the Word document from JSON and upload it to Azure Blob Storage
+
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
 
             string docsDirectory = "./docs";
             Directory.CreateDirectory(docsDirectory);
-            ReportCreator.runGeneration(result);
+            ReportCreator.RunGeneration(structuredJsonReport);
 
             string filePath = $"{docsDirectory}/Generated.docx";
             string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
@@ -210,7 +205,9 @@ class Program
         catch (Exception e)
         {
             Console.WriteLine("Word generation/upload failed. Structured JSON:");
-            Console.WriteLine(result); // Only show JSON if Word doc generation/upload fails
+            Console.WriteLine(structuredJsonReport); // Only show JSON if Word doc generation/upload fails
+            Console.WriteLine("User message was:");
+            Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "Word document generation/upload failed.");
             return;

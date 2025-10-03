@@ -165,7 +165,7 @@ namespace CsvParser.Services
                 foreach (var indexDef in createdIndexes)
                 {
                     // --- AIReportIndexes ---
-                    AIReportIndexes reportIndex;
+                    AIReportIndexes? reportIndex;
                     if (!reportIndexMap.TryGetValue(indexDef.IndexName, out reportIndex))
                     {
                         // Create new AIReportIndex
