@@ -122,7 +122,7 @@ class Program
         try
         {
             // Run the AI to generate the initial raw report content
-            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
+            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType, outputFormat: OutputFormat.PlainText);
 
         }
         catch (Exception ex)
@@ -170,7 +170,7 @@ class Program
         try
         {
             // Convert the AI report into a structured JSON format for further processing
-            structuredJsonReport = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
+            structuredJsonReport = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false, outputFormat: OutputFormat.Json);
         }
         catch (Exception e)
         {
