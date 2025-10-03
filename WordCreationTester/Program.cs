@@ -165,13 +165,12 @@ class Program
             Besides the final JSON, you should output no other information, text or thoughts about the quality of the report.
         """;
 
-        string result;
+        string structuredJsonReport;
 
         try
         {
             // Convert the AI report into a structured JSON format for further processing
-
-            result = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
+            structuredJsonReport = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
         }
         catch (Exception e)
         {
@@ -193,7 +192,7 @@ class Program
 
             string docsDirectory = "./docs";
             Directory.CreateDirectory(docsDirectory);
-            ReportCreator.runGeneration(result);
+            ReportCreator.runGeneration(structuredJsonReport);
 
             string filePath = $"{docsDirectory}/Generated.docx";
             string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
@@ -220,7 +219,7 @@ class Program
         catch (Exception e)
         {
             Console.WriteLine("Word generation/upload failed. Structured JSON:");
-            Console.WriteLine(result); // Only show JSON if Word doc generation/upload fails
+            Console.WriteLine(structuredJsonReport); // Only show JSON if Word doc generation/upload fails
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
