@@ -53,19 +53,6 @@ namespace WordCreationTester
                     ? 16000                                         // JSON: use full capacity
                     : 12800;                                        // Plain text: 80% is sufficient
 
-#pragma warning disable AOAI001 // Suppress the diagnostic warning
-
-                // This is just for debugging, we can probably turn it off when we are happy with things
-                if (dataSource)
-                {
-                    Console.WriteLine("Configured data sources:");
-                    foreach (var ds in options.GetDataSources())
-                    {
-                        Console.WriteLine(ds);
-                    }
-                }
-
-#pragma warning restore AOAI001 // Suppress the diagnostic warning
                 var messages = new List<ChatMessage>
                 {
                     new SystemChatMessage(systemMessage),
