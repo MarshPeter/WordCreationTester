@@ -50,13 +50,6 @@ class Program
             statements = new List<string> { "Generate a report" };
         }
 
-        // Extract categories
-        var categories = new List<string>();
-        if (!string.IsNullOrWhiteSpace(requestEntity.ReportCategories))
-        {
-            categories = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportCategories);
-        }
-
         /*
          * Building the AI message
          * This message provides the AI with a structured prompt that includes all the necessary context for generating a meaningful report.
@@ -66,11 +59,7 @@ class Program
          *      
          * - Search query seed (for retrieval):
          *      Defines the basis for AI retrieval and context, ensuring the report focuses on the statements the user has specified.
-         *      
-         * - Categories:
-         *      Defines the thematic focus of the report (e.g. Medication Safety, Infection Control)
-         *      This ensures the AI includes information around the specified categories and draws a clear focus on them.
-         *      
+         *         
          * - Report Type:
          *      Tells the AI what style or format the report should take (e.g. summary, risk analysis, assurance report)
          *      This is essential for aligning output with user's report expectations.
@@ -86,9 +75,6 @@ class Program
             Date To: {requestEntity.DateTo:yyyy-MM-dd}
 
             Search query seed (for retrieval): {string.Join(" ", statements)}
-
-            {(categories != null && categories.Any() ? $"Include information on these categories: {string.Join(", ", categories)}" : "")}
-
 
             Generate a report of type: {requestEntity.ReportType}
             
