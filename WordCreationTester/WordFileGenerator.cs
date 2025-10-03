@@ -17,7 +17,7 @@ namespace WordCreationTester
             _currentSectionAlreadyHasRun = false;
         }
 
-        public void addTitle(string text, string font = "Times New Roman")
+        public void AddTitle(string text, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
@@ -32,12 +32,12 @@ namespace WordCreationTester
             _body.AppendChild(p);
         }
 
-        public void addHeader(string text)
+        public void AddHeader(string text)
         {
-            addHeader(text, 1);
+            AddHeader(text, 1);
         }
 
-        public void addHeader(string text, int headingLevel, string font = "Times New Roman")
+        public void AddHeader(string text, int headingLevel, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
@@ -85,7 +85,7 @@ namespace WordCreationTester
             _currentSectionAlreadyHasRun = false;
         }
 
-        public void addParagraph(string text, string font = "Times New Roman")
+        public void AddParagraph(string text, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
@@ -107,7 +107,7 @@ namespace WordCreationTester
             _body.AppendChild(p);
         }
 
-        public void addDotpointParagraph(string text, int indentLevel = 1, string font = "Times New Roman")
+        public void AddDotpointParagraph(string text, int indentLevel = 1, string font = "Times New Roman")
         {
             var p = new Paragraph();
 
@@ -127,7 +127,7 @@ namespace WordCreationTester
 
 
         // This is likely to not be used, can maybe be removed in final implementation
-        public void addNumericListParagraph(string text, int number, int indentLevel, string font = "Times New Roman")
+        public void AddNumericListParagraph(string text, int number, int indentLevel, string font = "Times New Roman")
         {
 
             var p = new Paragraph();
@@ -148,7 +148,7 @@ namespace WordCreationTester
         // Whenever this is called a new table is created and added to the document
         // we then also remember this table so that we can add cells to it
         // if cells are not added to the table, the table will just be blank.
-        public void addTable(int rows, int columns)
+        public void AddTable(int rows, int columns)
         {
             var t = new Table(rows, columns);
             t.Style = _doc.GetElementStyles().TableStyles[1]; // sets solid black borders
@@ -157,7 +157,7 @@ namespace WordCreationTester
         }
 
         // Bolded are seen as table headings, otherwise it's a normal cell
-        public void addTableCell(string text, string fontWeight, int rowNum, int colNum, string font = "Times New Roman")
+        public void AddTableCell(string text, string fontWeight, int rowNum, int colNum, string font = "Times New Roman")
         {
             var row = _currentTable!.Rows[rowNum];
             var cell = row.Cells[colNum];
@@ -175,7 +175,7 @@ namespace WordCreationTester
             cell.Paragraphs.Add(p);
         }
 
-        public void saveDocument(string dir, string filename)
+        public void SaveDocument(string dir, string filename)
         {
             _doc.Save($"{dir}/{filename}");
         }

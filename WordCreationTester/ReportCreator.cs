@@ -33,7 +33,7 @@ namespace WordCreationTester
                 // Create a new Word document instance
                 var doc = new Document();
 
-                // Create a new WordFileGenerator instance, wrapping the Word document with helper methods (addTitle, addHeader, addParagraph, etc.)
+                // Create a new WordFileGenerator instance, wrapping the Word document with helper methods (AddTitle, AddHeader, AddParagraph, etc.)
                 var word = new WordFileGenerator(doc);
 
                 // Process each report segment one by one and add it to the Word doc
@@ -58,7 +58,7 @@ namespace WordCreationTester
             {
                 if (s.Text == null || s.Text.Equals("")) return;
 
-                w.addTitle(s.Text);
+                w.AddTitle(s.Text);
             }
 
             // Add header
@@ -66,7 +66,7 @@ namespace WordCreationTester
             {
                 if (s.Text == null || s.Text.Equals("")) return;
 
-                w.addHeader(s.Text);
+                w.AddHeader(s.Text);
             }
 
             // Handle plain paragraph text
@@ -74,7 +74,7 @@ namespace WordCreationTester
             {
                 if (s.Text == null || s.Text.Equals("")) return;
 
-                w.addParagraph(s.Text);
+                w.AddParagraph(s.Text);
             }
 
             // Handle bullet-point lists
@@ -84,7 +84,7 @@ namespace WordCreationTester
 
                 foreach (string point in s.Items)
                 {
-                    w.addDotpointParagraph(point);
+                    w.AddDotpointParagraph(point);
                 }
             }
 
@@ -101,12 +101,12 @@ namespace WordCreationTester
                 // Create table structure:
                 // - First row = headers
                 // - Following rows = table data
-                w.addTable(s.Columns.Count(), s.Columns.Count * s.Rows.Count);
+                w.AddTable(s.Columns.Count(), s.Columns.Count * s.Rows.Count);
 
                 // Add header cells (bold font)
                 for (int i = 0; i < s.Columns.Count(); i++)
                 {
-                    w.addTableCell(s.Columns[i], fontWeight: "bold", 0, i);
+                    w.AddTableCell(s.Columns[i], fontWeight: "bold", 0, i);
 
                 }
 
@@ -115,7 +115,7 @@ namespace WordCreationTester
                 {
                     for (int j = 0; j < s.Rows[i].Count; j++)
                     {
-                        w.addTableCell(s.Rows[i][j], "normal", i, j);
+                        w.AddTableCell(s.Rows[i][j], "normal", i, j);
                     }
                 }
 
