@@ -96,7 +96,6 @@ class Program
 
         ";
 
-        Console.WriteLine(userMessage);
 
         // Run AI
         await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "AI report generation started.");
@@ -122,11 +121,15 @@ class Program
 
         try
         {
+            // Run the AI to generate the initial raw report content
             reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType);
 
         }
         catch (Exception ex)
         {
+            Console.WriteLine("AI report generation failed.");
+            Console.WriteLine("User message was:");
+            Console.WriteLine(userMessage);
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "AI returned no report content.");
             Console.WriteLine(ex.ToString());
             return;
@@ -166,12 +169,15 @@ class Program
 
         try
         {
+            // Convert the AI report into a structured JSON format for further processing
             structuredJsonReport = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false);
         }
         catch (Exception e)
         {
             Console.WriteLine("JSON translation failed. Raw AI report:");
             Console.WriteLine(reportContent); // Only show the AI report if structured JSON step fails
+            Console.WriteLine("User message was:");
+            Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "No structured JSON returned by AI.");
             return;
@@ -179,6 +185,9 @@ class Program
 
         try
         {
+
+            // Generate the Word document from JSON and upload it to Azure Blob Storage
+
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
 
             string docsDirectory = "./docs";
@@ -211,6 +220,8 @@ class Program
         {
             Console.WriteLine("Word generation/upload failed. Structured JSON:");
             Console.WriteLine(structuredJsonReport); // Only show JSON if Word doc generation/upload fails
+            Console.WriteLine("User message was:");
+            Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
             await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "Word document generation/upload failed.");
             return;

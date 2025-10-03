@@ -39,19 +39,8 @@ namespace WordCreationTester
                 options.FrequencyPenalty = 0.5f;  //Medium= reduce repeated words
                 options.PresencePenalty = 0.2f;   //Low = mostly stays on same topics
                 options.MaxOutputTokenCount = 16000;   // high= allows long responses/ Max for gpt-4o-mini is 16384
-#pragma warning disable AOAI001 // Suppress the diagnostic warning
 
-                // This is just for debugging, we can probably turn it off when we are happy with things
-                if (dataSource)
-                {
-                    Console.WriteLine("Configured data sources:");
-                    foreach (var ds in options.GetDataSources())
-                    {
-                        Console.WriteLine(ds);
-                    }
-                }
 
-#pragma warning restore AOAI001 // Suppress the diagnostic warning
                 var messages = new List<ChatMessage>
                 {
                     new SystemChatMessage(systemMessage),

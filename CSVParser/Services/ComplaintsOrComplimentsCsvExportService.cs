@@ -45,6 +45,7 @@ namespace CsvParser.Services
             return filePath;
         }
 
+        // Build EF Core query for complaints/compliments
         private IQueryable<ComplaintsOrComplimentsCsvRow> BuildComplaintsOrComplimentsQuery()
         {
             var query = from cc in _dbContext.ComplaintsOrCompliments
@@ -120,6 +121,7 @@ namespace CsvParser.Services
             _logger.LogInformation("CSV export complete. Total rows: {TotalRows}", written);
         }
 
+        // Convert values to string with formatting for dates
         private static string ConvertToString(object? value) =>
             value switch
             {
@@ -130,6 +132,7 @@ namespace CsvParser.Services
                 _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty
             };
 
+        // Escape a string so it is valid CSV (handles quotes, commas, newlines)
         private static string EscapeCsv(string? s)
         {
             if (string.IsNullOrEmpty(s)) return string.Empty;
