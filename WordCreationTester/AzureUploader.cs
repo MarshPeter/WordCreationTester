@@ -5,6 +5,7 @@ namespace WordCreationTester
 {
     public static class AzureUploader
     {
+        // Uploads a file to Azure Blob Storage in the "reports" container and returns the blob URL
         public static async Task<string> UploadReportAsync(string filePath, string blobName, AIConfig config)
         {
             string connectionString = config.BlobConnectionString;
