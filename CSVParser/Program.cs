@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CsvParser
 {
@@ -50,6 +51,15 @@ namespace CsvParser
                         "Contains information about received complaints and complements towards the business",
                         host.Services.GetRequiredService<ComplaintsOrComplimentsCsvExportService>())
                 };
+
+                //  Error handling: enforce AI Search tier index limit
+                 if (indexes.Count > 15)
+                {
+                    var bootLogger = host.Services.GetRequiredService<ILogger<Program>>();
+                    bootLogger.LogError("Too many indexes defined ({Count}). For Basic tier, a maximum of 15 is allowed.", indexes.Count);
+                    Environment.Exit(1);
+                    return;
+                }
 
 
                 var azureUploadService = host.Services.GetRequiredService<AzureUploadService>();
