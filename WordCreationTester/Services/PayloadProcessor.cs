@@ -1,7 +1,9 @@
 ﻿using System.Text.Json;
+using WordCreationTester.Configuration;
+using WordCreationTester.DTO;
 
 
-namespace WordCreationTester
+namespace WordCreationTester.Services
 {
     public static class PayloadProcessor
     {
@@ -53,6 +55,15 @@ namespace WordCreationTester
                     TenantId = payload.TenantId,
                     AIRequestId = payload.AIRequestId
                 };
+
+                //string serviceBusConnectionString = Environment.GetEnvironmentVariable("SERVICE_BUS_CONNECTION_STRING");
+                //string queueName = "reports";
+
+                //await using var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
+                //ServiceBusSender sender = serviceBusClient.CreateSender(queueName);
+
+                //var serviceBusMessage = new ServiceBusMessage(JsonSerializer.Serialize(minimalMessage, jsonOptions));
+                //await sender.SendMessageAsync(serviceBusMessage);
 
                 Console.WriteLine("Minimal message sent to Service Bus.");
                 await StatusLogger.LogStatusAsync(payload.AIRequestId, "Queued", "Minimal message sent to Service Bus for processing.");

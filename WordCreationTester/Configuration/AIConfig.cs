@@ -1,6 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace WordCreationTester
+namespace WordCreationTester.Configuration
 {
     public class AIConfig
     {

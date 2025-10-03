@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
-using WordCreationTester;
+using WordCreationTester.Azure;
+using WordCreationTester.Configuration;
+using WordCreationTester.DTO;
+using WordCreationTester.Services;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class Program
@@ -178,7 +181,7 @@ class Program
 
             string docsDirectory = "./docs";
             Directory.CreateDirectory(docsDirectory);
-            ReportCreator.RunGeneration(structuredJsonReport);
+            ReportCreator.runGeneration(structuredJsonReport);
 
             string filePath = $"{docsDirectory}/Generated.docx";
             string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";

@@ -3,8 +3,9 @@ using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
 
 using OpenAI.Chat;
+using WordCreationTester.Configuration;
 
-namespace WordCreationTester
+namespace WordCreationTester.Services
 {
 
     // Defines the format of the AI's response output

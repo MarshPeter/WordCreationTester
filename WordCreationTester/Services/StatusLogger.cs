@@ -1,6 +1,6 @@
-﻿
+﻿using WordCreationTester.Configuration;
 
-namespace WordCreationTester
+namespace WordCreationTester.Services
 {
     public static class StatusLogger
     {

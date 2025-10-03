@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WordCreationTester;
+using WordCreationTester.Configuration;
+using WordCreationTester.DTO;
 
 public class PayloadDbConnection : DbContext
 {

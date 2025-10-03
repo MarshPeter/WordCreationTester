@@ -1,6 +1,4 @@
-﻿
-
-namespace WordCreationTester
+﻿namespace WordCreationTester.DTO
 {
     public class AIReportResultEntity
     {
