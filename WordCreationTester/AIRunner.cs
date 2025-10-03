@@ -39,7 +39,7 @@ namespace WordCreationTester
 
                 if (dataSource)
                 {
-                    options.AddDataSource(retrieveDataSource(config.SearchEndpoint, config.SearchKey, searchIndex));
+                    options.AddDataSource(RetrieveDataSource(config.SearchEndpoint, config.SearchKey, searchIndex));
                 }
 
 #pragma warning restore AOAI001 // Suppress the diagnostic warning
@@ -75,7 +75,7 @@ namespace WordCreationTester
         // But is not seen as stable at this stage according to official documentation. 
 
         // This gives permission to the LLM model to communicate with our AI Search instance
-        private static AzureSearchChatDataSource retrieveDataSource(string searchEndpoint, string searchKey, string searchIndex)
+        private static AzureSearchChatDataSource RetrieveDataSource(string searchEndpoint, string searchKey, string searchIndex)
         {
             return new AzureSearchChatDataSource()
             {
