@@ -181,7 +181,7 @@ class Program
 
             string docsDirectory = "./docs";
             Directory.CreateDirectory(docsDirectory);
-            ReportCreator.runGeneration(structuredJsonReport);
+            ReportCreator.RunGeneration(structuredJsonReport);
 
             string filePath = $"{docsDirectory}/Generated.docx";
             string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
