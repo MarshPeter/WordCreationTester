@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CsvParser
 {
@@ -31,6 +33,8 @@ namespace CsvParser
                 // We should have less indexes in this list than the number that is allowed in AI Search Services and our Tier
                 // For basic tier, we must not have more than 15
                 var indexes = new List<IndexDefinition>
+
+
                 {
                     new IndexDefinition(
                         "assurances",
@@ -51,6 +55,10 @@ namespace CsvParser
                         host.Services.GetRequiredService<ComplaintsOrComplimentsCsvExportService>())
                 };
 
+                
+               
+
+
 
                 var azureUploadService = host.Services.GetRequiredService<AzureUploadService>();
                 var duplicateRemovalService = host.Services.GetRequiredService<CsvDuplicateRemovalService>();
@@ -60,6 +68,17 @@ namespace CsvParser
                 logger.LogInformation("Starting CSV export process for {tenant_Id}...", tenantId);
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+                 // Validate index count limit for the Azure Search service tier(Basic = max 15).
+                if (indexes.Count > 15)
+                {
+                    logger.LogError(
+                        "Too many indexes defined ({Count}). Basic tier allows a maximum of 15. Aborting index creation.",
+                        indexes.Count
+                    );
+                    return;
+                }
+
 
 
                 // it goes through each index, creates a CSV  and removes duplicates,
