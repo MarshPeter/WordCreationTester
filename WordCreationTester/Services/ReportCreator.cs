@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Openize.Words;
 
-namespace WordCreationTester
+namespace WordCreationTester.Services
 {
     public static class ReportCreator
     {
@@ -25,7 +25,7 @@ namespace WordCreationTester
 
                 // If the parsed report is empty, throw InvalidOperationException to signal unusable input.
                 if (report.Count == 0)
-                    throw new System.InvalidOperationException("No report sections were provided.");
+                    throw new InvalidOperationException("No report sections were provided.");
 
 
 
@@ -45,7 +45,7 @@ namespace WordCreationTester
                 // Save the generated Word document to directory
                 doc.Save($"{docsDirectory}/{filename}");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 throw new FileFormatException("An error occurred.", ex);
             }

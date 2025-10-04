@@ -1,7 +1,8 @@
 ﻿using Azure.Storage.Blobs;
+using WordCreationTester.Configuration;
 
 
-namespace WordCreationTester
+namespace WordCreationTester.Azure
 {
     public static class AzureUploader
     {

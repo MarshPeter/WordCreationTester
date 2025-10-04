@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace WordCreationTester
+namespace WordCreationTester.DTO
 {
     public class AIReportRequestEntity
     {

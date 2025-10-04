@@ -1,7 +1,7 @@
 ﻿using Openize.Words;
 using Openize.Words.IElements;
 
-namespace WordCreationTester
+namespace WordCreationTester.Services
 {
     public class WordFileGenerator
     {
