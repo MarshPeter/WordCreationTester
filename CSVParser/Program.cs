@@ -67,7 +67,7 @@ namespace CsvParser
                 foreach (var idx in indexes)
                 {
                     string csvPath = await idx.ExportService.ExportCSV(idx.IndexName, timestamp);
-                    logger.LogInformation($"{idx.IndexName} CSV created at: {csvPath}");
+                    logger.LogInformation("{index_Name} CSV created at: {csv_Path}", idx.IndexName, csvPath);
 
                    // remove duplicate files from CSV
                     string finalCsvPath = await ProcessCsvForDuplicates(
@@ -83,7 +83,7 @@ namespace CsvParser
                     await azureUploadService.UploadFileAsync(finalCsvPath, assuranceBlobName, idx.IndexName);
                     logger.LogInformation("{index_name} CSV uploaded as: {assurance_blob_name}", idx.IndexName, assuranceBlobName);
 
-                  // delete temporary local files
+                    // delete temporary local files
                     File.Delete(finalCsvPath);
                     File.Delete(csvPath);
                     logger.LogInformation("Local leftover CSV files have been removed");

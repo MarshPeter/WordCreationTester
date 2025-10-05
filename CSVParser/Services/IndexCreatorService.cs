@@ -40,13 +40,11 @@ namespace CsvParser.Services
             string skillsetName = $"{indexName}-skillset";
             string indexerName = $"{indexName}-indexer";
 
-
             string blobConnectionString = _settings.BlobConnectionString;
             string containerName = "reports";
             // Azure OpenAI configuration
             string openAIEndpoint = _settings.LLMAIEndpoint;
             string openAIKey = _settings.LLMAIKey;
-
             
             //THE FOLLOWING CODE IS AN EXAMPLE OF INDEXING CREATION
             string dataSourcePayload = $@"
@@ -132,54 +130,43 @@ namespace CsvParser.Services
                 // Get name of the indexes being created 
                 var indexNames = createdIndexes.Select(x => x.IndexName).ToList();
 
-                // Get existing AIReportIndexes that match the provided index names
-
+                // Get existing AIReportIndexes that match the provided index names for this particular tenant
                 var existingReportIndexes = await _dbContext.AIReportIndexes
-                    .Where(r => indexNames.Contains(r.IndexName))
+                    .Where(r => indexNames.Contains(r.IndexName) && r.CreatedById == Environment.GetEnvironmentVariable("FAKE_OWNER"))
                     .ToListAsync(ct);
 
                 // Create a dictionary for quick lookup of existing report indexes by name
                 var reportIndexMap = existingReportIndexes.ToDictionary(r => r.IndexName, r => r);
 
-                // find existing tenant-to-index mappings by joining across AICSVDocuments, 
-                // AIReportTenantIndexes, and AIReportIndexes. This shows which indexes are already linked
-                // to the tenant's documents.
-                var existingMappings = await (
-                    from doc in _dbContext.AICSVDocuments
-                    join link in _dbContext.AIReportTenantIndexes on doc.Id equals link.AIDocumentId
-                    join idx in _dbContext.AIReportIndexes on link.AIReportIndexId equals idx.Id
-                    where doc.TenantId.ToString().Equals(tenantId)
-                    select new
-                    {
-                        Document = doc,
-                        ReportIndex = idx
-                    }
-                ).ToListAsync(ct);
-
                 // Prepare lists for any new docs and tenant–index links we might need to create
                 var now = DateTime.UtcNow;
-                var newDocs = new List<AICSVDocuments>();
-                var newTenantIndexes = new List<AIReportTenantIndexes>();
 
                 // Go through each index we want to create
                 foreach (var indexDef in createdIndexes)
                 {
                     // --- AIReportIndexes ---
                     AIReportIndexes? reportIndex;
+                    bool newIndex = false;
                     if (!reportIndexMap.TryGetValue(indexDef.IndexName, out reportIndex))
                     {
                         // Create new AIReportIndex
                         reportIndex = new AIReportIndexes
                         {
                             Id = Guid.NewGuid(),
+                            DisplayId = "1",
                             IndexName = indexDef.IndexName,
-                            DisplayName = indexDef.DisplayName,
-                            IndexDescription = indexDef.IndexDescription
+                            IndexDescription = indexDef.IndexDescription,
+                            UIDisplayName = indexDef.DisplayName,
+                            IndexLastUpdatedDt = DateTime.UtcNow,
+                            CreatedById = Environment.GetEnvironmentVariable("FAKE_OWNER"),
+                            CreatedDt = DateTime.UtcNow,
+                            Status = "In Progress: Creating Index"
                         };
                         _dbContext.AIReportIndexes.Add(reportIndex);
                         reportIndexMap[indexDef.IndexName] = reportIndex;
 
                         newlyCreatedIndexes.Add(indexDef.IndexName);
+                        newIndex = true;
                     }
                     else
                     {
@@ -187,51 +174,34 @@ namespace CsvParser.Services
                         if (reportIndex.IndexDescription != indexDef.IndexDescription)
                         {
                             reportIndex.IndexDescription = indexDef.IndexDescription;
-                            _dbContext.AIReportIndexes.Update(reportIndex);
                         }
+
+                        // Update UIDisplay Name if changed
+                        if (reportIndex.UIDisplayName != indexDef.DisplayName)
+                        {
+                            reportIndex.UIDisplayName = indexDef.DisplayName;
+                        }
+
+                        // We write here to indicate that the CSV documents will have been updated by this time. 
+                        reportIndex.IndexLastUpdatedDt = DateTime.UtcNow;
                     }
 
-                    // --- AICSVDocuments + AIReportTenantIndexes ---
-                    var mapping = existingMappings.FirstOrDefault(m => m.ReportIndex.IndexName == indexDef.IndexName);
-
-                    if (mapping == null)
+                    if (newIndex)
                     {
                         bool res = await CreateIndex(indexDef.IndexName);
 
-                        // Create new document for this tenant
-                        var doc = new AICSVDocuments
+                        if (res)
                         {
-                            Id = Guid.NewGuid(),
-                            TenantId = System.Guid.Parse(tenantId),
-                            LastUpdatedTimestamp = now
-                        };
-                        newDocs.Add(doc);
-
-                        // Create join link
-                        newTenantIndexes.Add(new AIReportTenantIndexes
+                            reportIndex.Status = "Success: Indexes created";
+                        } else
                         {
-                            AIDocumentId = doc.Id,
-                            AIReportIndexId = reportIndex.Id
-                        });
+                            reportIndex.Status = "Failed: Index was unable to be created";
+                        }
 
                         if (!newlyCreatedIndexes.Contains(indexDef.IndexName))
                             newlyCreatedIndexes.Add(indexDef.IndexName);
                     }
-                    else
-                    {
-                        // Update timestamp on existing doc
-                        mapping.Document.LastUpdatedTimestamp = now;
-                        _dbContext.AICSVDocuments.Update(mapping.Document);
-                    }
                 }
-
-                // Save new docs
-                if (newDocs.Any())
-                    await _dbContext.AICSVDocuments.AddRangeAsync(newDocs, ct);
-
-                // Save new tenant-index links
-                if (newTenantIndexes.Any())
-                    await _dbContext.AIReportTenantIndexes.AddRangeAsync(newTenantIndexes, ct);
 
                 await _dbContext.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
@@ -250,6 +220,7 @@ namespace CsvParser.Services
                 return false;
             }
         }
+
         public static async Task<bool> CreateDataSourceAsync(
         string searchServiceName,
         string dataSourcePayload)
