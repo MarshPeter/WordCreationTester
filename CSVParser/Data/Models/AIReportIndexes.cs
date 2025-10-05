@@ -10,9 +10,13 @@ namespace CsvParser.Data.Models
     public partial class AIReportIndexes
     {
         public Guid Id { get; set; }
+        public string DisplayId { get; set; }
         public string IndexName { get; set; }
-        public string DisplayName { get; set; }
         public string IndexDescription { get; set; }
-        public ICollection<AIReportTenantIndexes> ReportTenantIndexes { get; set; }
+        public string UIDisplayName { get; set; }
+        public DateTime IndexLastUpdatedDt { get; set; }
+        public string CreatedById { get; set; }
+        public DateTime CreatedDt { get; set; }
+        public string Status { get; set; }
     }
 }
