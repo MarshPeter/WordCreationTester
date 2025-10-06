@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using WordCreationTester.Azure;
 using WordCreationTester.Configuration;
 using WordCreationTester.DTO;
 
@@ -33,7 +34,7 @@ namespace WordCreationTester.Services
                 }
 
                 // --- Log status update ---
-                await StatusLogger.LogStatusAsync(payload.Id, 1, "Payload created and stored in database.");
+                await PayloadOutcomeUpdater.UpdatePayloadStatus(payload.Id, 1, "Payload created and stored in database.");
 
                 // --- Send minimal Service Bus message ---
                 var minimalMessage = new ServiceBusRequestMessage
@@ -43,12 +44,12 @@ namespace WordCreationTester.Services
                 };
 
                 Console.WriteLine("Minimal message sent to Service Bus.");
-                await StatusLogger.LogStatusAsync(payload.Id, 1, "Minimal message sent to Service Bus for processing.");
+                await PayloadOutcomeUpdater.UpdatePayloadStatus(payload.Id, 1, "Minimal message sent to Service Bus for processing.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[Error] Failed to process payload: {ex.Message}");
-                await StatusLogger.LogStatusAsync(payload.Id, 1, $"Payload processing error: {ex.Message}");
+                await PayloadOutcomeUpdater.UpdatePayloadStatus(payload.Id, 1, $"Payload processing error: {ex.Message}");
                 throw;
             }
         }

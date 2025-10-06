@@ -25,7 +25,7 @@ class Program
         Console.WriteLine("Processor received message.");
         Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
 
-        await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, 1, "Message received for processing.");
+        await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 1, "Message received for processing.");
 
         using var dbContext = new PayloadDbConnection(config);
 
@@ -35,7 +35,7 @@ class Program
 
         if (requestEntity == null)
         {
-            await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, 1, "No payload found in database.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 1, "No payload found in database.");
             Console.WriteLine("No payload found in DB.");
             return;
         }
@@ -61,11 +61,7 @@ class Program
 
         if (index == null)
         {
-            await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, 1, "Index was not found attached to request");
-            requestEntity.Status = 1;
-            requestEntity.Outcome = "Index was not found attached to request";
-            await dbContext.SaveChangesAsync();
-
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 1, "Index was not found attached to request");
             return;
         }
 
@@ -88,21 +84,19 @@ class Program
          * 
         */
         string userMessage = $@"
-            Using the following information, generate a detailed report.
+            Using the following search request, generate a detailed report.
+
+            Search Request: {string.Join(" ", statements)}
 
             Date From: {requestEntity.FromDt:yyyy-MM-dd}
             Date To: {requestEntity.ToDt:yyyy-MM-dd}
 
-            Search query seed (for retrieval): {string.Join(" ", statements)}
-
             Generate a report of type: Compliance Assurance Report
-            
-            Index Type: {index.UIDisplayName}
-        ";
+            ";
 
 
         // Run AI
-        await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "AI report generation started.");
+        await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "AI report generation started.");
 
         string reportGenerationSystemMessage = """
             You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
@@ -126,7 +120,7 @@ class Program
         try
         {
             // Run the AI to generate the initial raw report content
-            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, index.IndexName, outputFormat: OutputFormat.PlainText);
+            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, "my-index", outputFormat: OutputFormat.PlainText);
 
         }
         catch (Exception ex)
@@ -134,12 +128,8 @@ class Program
             Console.WriteLine("AI report generation failed.");
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
-            await StatusLogger.LogStatusAsync(requestEntity.Id, 2, "AI returned no report content.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 2, "AI returned no report content.");
             Console.WriteLine(ex.ToString());
-            requestEntity.Status = 1;
-            requestEntity.Outcome = "AI returned no report content.";
-            requestEntity.OutcomeDt = DateTime.Now;
-            await dbContext.SaveChangesAsync();
             return;
         }
 
@@ -187,10 +177,7 @@ class Program
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
-            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "No structured JSON returned by AI.");
-            requestEntity.Status = 1;
-            requestEntity.Outcome = "Json generation of report failed, aborted process";
-            await dbContext.SaveChangesAsync();
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "No structured JSON returned by AI.");
             return;
         }
 
@@ -198,7 +185,7 @@ class Program
         {
 
             // Generate the Word document from JSON and upload it to Azure Blob Storage
-            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "Generating Word document and uploading to Blob.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "Generating Word document and uploading to Blob.");
 
             string docsDirectory = "./docs";
             Directory.CreateDirectory(docsDirectory);
@@ -209,14 +196,11 @@ class Program
             var blobUrl = await AzureUploader.UploadReportAsync(filePath, blobName, config);
 
             // TODO: Setup Attachments
-
-            requestEntity.Status = 2;
-            requestEntity.OutcomeDt = DateTime.Now;
-            requestEntity.Outcome = "Report successfully generated";
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 2, "Report successfull updated");
 
             await dbContext.SaveChangesAsync();
 
-            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, $"Report generated successfully and uploaded. URL={blobUrl}");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, $"Report generated successfully and uploaded. URL={blobUrl}");
 
             Console.WriteLine($"Report stored in DB, URL={blobUrl}");
         }
@@ -227,7 +211,7 @@ class Program
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
-            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "Word document generation/upload failed.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "Word document generation/upload failed.");
             return;
         }
     }
@@ -237,7 +221,7 @@ class Program
 
         Console.WriteLine("Simulating Service Bus processor...");
 
-        string userMessage = "Show me a summary of all comments made about medication safety.";
+        string userMessage = "Show me a summary of all comments made about medication safety. Include Medication Safety and Infection Control information";
 
         // Create fake payload
         var payload = new AIReportRequest

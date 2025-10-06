@@ -26,7 +26,6 @@ namespace WordCreationTester.Services
             bool dataSource = true,
             OutputFormat outputFormat = OutputFormat.PlainText)
         {
-
             try
             {
                 var openAIClient = new AzureOpenAIClient(
@@ -61,7 +60,6 @@ namespace WordCreationTester.Services
                 };
 
                 ChatCompletion completion = await chatClient.CompleteChatAsync(messages, options);
-
 
 
                 return completion.Content[0].Text;

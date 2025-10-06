@@ -1,10 +1,11 @@
 ﻿using WordCreationTester.Configuration;
 
-namespace WordCreationTester.Services
+namespace WordCreationTester.Azure
 {
-    public static class StatusLogger
+    public static class PayloadOutcomeUpdater
     {
-        public static async Task LogStatusAsync(Guid aiRequestId, int status, string description)
+        // TODO: Transform the status into the string for logging. 
+        public static async Task UpdatePayloadStatus(Guid aiRequestId, int status, string description)
         {
             var config = AIConfig.FromEnvironment();
 
@@ -17,8 +18,10 @@ namespace WordCreationTester.Services
                 return;
             }
 
+           
             request.Status = status;
             request.Outcome = description;
+            request.OutcomeDt = DateTime.Now;
 
             await dbContext.SaveChangesAsync();
 
