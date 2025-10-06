@@ -4,7 +4,6 @@ using WordCreationTester.Azure;
 using WordCreationTester.Configuration;
 using WordCreationTester.DTO;
 using WordCreationTester.Services;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class Program
 {
@@ -26,31 +25,48 @@ class Program
         Console.WriteLine("Processor received message.");
         Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
 
-        await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, "Processing", "Message received for processing.");
+        await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, 1, "Message received for processing.");
 
         using var dbContext = new PayloadDbConnection(config);
 
         // Fetch full request from DB
-        var requestEntity = await dbContext.AIReportRequests
-            .FirstOrDefaultAsync(r => r.AIRequestId == minimalMessage.AIRequestId);
+        var requestEntity = await dbContext.AIReportRequest
+            .FirstOrDefaultAsync(r => r.Id == minimalMessage.AIRequestId);
 
         if (requestEntity == null)
         {
-            await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, "Failed", "No payload found in database.");
+            await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, 1, "No payload found in database.");
             Console.WriteLine("No payload found in DB.");
             return;
         }
 
         // Extract statements
         var statements = new List<string>();
-        if (!string.IsNullOrWhiteSpace(requestEntity.ReportStatements))
+        if (!string.IsNullOrWhiteSpace(requestEntity.ReportParametersJSON))
         {
-            statements = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportStatements);
+            statements = JsonSerializer.Deserialize<List<string>>(requestEntity.ReportParametersJSON);
         }
 
         if (statements == null || statements.Count == 0)
         {
-            statements = new List<string> { "Generate a report" };
+            requestEntity.Status = 1;
+            await dbContext.SaveChangesAsync();
+
+            return;
+        }
+
+        // Retrieve index
+        var index = await dbContext.AIReportIndexes
+            .FirstOrDefaultAsync(r => r.Id == requestEntity.AIReportIndexId && r.CreatedById == requestEntity.CreatedById.ToString());
+
+        if (index == null)
+        {
+            await StatusLogger.LogStatusAsync(minimalMessage.AIRequestId, 1, "Index was not found attached to request");
+            requestEntity.Status = 1;
+            requestEntity.Outcome = "Index was not found attached to request";
+            await dbContext.SaveChangesAsync();
+
+            return;
         }
 
         /*
@@ -74,20 +90,19 @@ class Program
         string userMessage = $@"
             Using the following information, generate a detailed report.
 
-            Date From: {requestEntity.DateFrom:yyyy-MM-dd}
-            Date To: {requestEntity.DateTo:yyyy-MM-dd}
+            Date From: {requestEntity.FromDt:yyyy-MM-dd}
+            Date To: {requestEntity.ToDt:yyyy-MM-dd}
 
             Search query seed (for retrieval): {string.Join(" ", statements)}
 
-            Generate a report of type: {requestEntity.ReportType}
+            Generate a report of type: Compliance Assurance Report
             
-            Index Type: {requestEntity.IndexType}
-
+            Index Type: {index.UIDisplayName}
         ";
 
 
         // Run AI
-        await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "AI report generation started.");
+        await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "AI report generation started.");
 
         string reportGenerationSystemMessage = """
             You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
@@ -111,7 +126,7 @@ class Program
         try
         {
             // Run the AI to generate the initial raw report content
-            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, requestEntity.IndexType, outputFormat: OutputFormat.PlainText);
+            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, index.IndexName, outputFormat: OutputFormat.PlainText);
 
         }
         catch (Exception ex)
@@ -119,8 +134,12 @@ class Program
             Console.WriteLine("AI report generation failed.");
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
-            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "AI returned no report content.");
+            await StatusLogger.LogStatusAsync(requestEntity.Id, 2, "AI returned no report content.");
             Console.WriteLine(ex.ToString());
+            requestEntity.Status = 1;
+            requestEntity.Outcome = "AI returned no report content.";
+            requestEntity.OutcomeDt = DateTime.Now;
+            await dbContext.SaveChangesAsync();
             return;
         }
 
@@ -159,7 +178,7 @@ class Program
         try
         {
             // Convert the AI report into a structured JSON format for further processing
-            structuredJsonReport = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, requestEntity.IndexType, false, outputFormat: OutputFormat.Json);
+            structuredJsonReport = await AIRunner.RunAI(config, jsonGenerationSystemMessage, reportContent, index.IndexName, false, outputFormat: OutputFormat.Json);
         }
         catch (Exception e)
         {
@@ -168,7 +187,10 @@ class Program
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
-            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "No structured JSON returned by AI.");
+            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "No structured JSON returned by AI.");
+            requestEntity.Status = 1;
+            requestEntity.Outcome = "Json generation of report failed, aborted process";
+            await dbContext.SaveChangesAsync();
             return;
         }
 
@@ -176,8 +198,7 @@ class Program
         {
 
             // Generate the Word document from JSON and upload it to Azure Blob Storage
-
-            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Processing", "Generating Word document and uploading to Blob.");
+            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "Generating Word document and uploading to Blob.");
 
             string docsDirectory = "./docs";
             Directory.CreateDirectory(docsDirectory);
@@ -187,21 +208,15 @@ class Program
             string blobName = $"Generated_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
             var blobUrl = await AzureUploader.UploadReportAsync(filePath, blobName, config);
 
-            // Save results back into DB
-            dbContext.AIReportResults.Add(new AIReportResultEntity
-            {
-                TenantId = requestEntity.TenantId,
-                AIRequestId = requestEntity.AIRequestId,
-                ReportName = blobName,
-                ReportBlobUrl = blobUrl.ToString(),
-                Status = "Complete",
-                CompletedAt = DateTime.Now
-            });
+            // TODO: Setup Attachments
 
-            requestEntity.Status = "Completed";
+            requestEntity.Status = 2;
+            requestEntity.OutcomeDt = DateTime.Now;
+            requestEntity.Outcome = "Report successfully generated";
+
             await dbContext.SaveChangesAsync();
 
-            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Completed", $"Report generated successfully and uploaded. URL={blobUrl}");
+            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, $"Report generated successfully and uploaded. URL={blobUrl}");
 
             Console.WriteLine($"Report stored in DB, URL={blobUrl}");
         }
@@ -212,7 +227,7 @@ class Program
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
-            await StatusLogger.LogStatusAsync(requestEntity.AIRequestId, "Failed", "Word document generation/upload failed.");
+            await StatusLogger.LogStatusAsync(requestEntity.Id, 1, "Word document generation/upload failed.");
             return;
         }
     }
@@ -225,27 +240,22 @@ class Program
         string userMessage = "Show me a summary of all comments made about medication safety.";
 
         // Create fake payload
-        var payload = new AIReportRequestPayload
+        var payload = new AIReportRequest
         {
-            TenantId = Guid.NewGuid(),
-            AIRequestId = Guid.NewGuid(),
-
-            CreatedBy = "test.user@example.com",
-            DateFrom = new DateTime(2020, 01, 01),
-            DateTo = DateTime.UtcNow.Date,
-
-            ReportType = "Compliance Assurance Report",
-            ReportCategories = new List<string> { "Medication Safety", "Infection Control" },
-            ReportStatements = new List<ReportStatement>
-            {
-                new ReportStatement { Text = userMessage },
-                new ReportStatement { Text = "Evaluate medication handling compliance in the last 12 months." },
-                new ReportStatement { Text = "Identify gaps in infection control processes across departments." }
-            },
-            IndexType = "my-index",
+            Id = Guid.NewGuid(),
+            DisplayId = "1",
+            ReportType = 1,
+            FromDt = new DateTime(2020, 01, 01),
+            ToDt = DateTime.UtcNow.Date,
+            ReportParametersJSON = JsonSerializer.Serialize(new[] { userMessage }),
+            CreatedById = Environment.GetEnvironmentVariable("FAKE_OWNER") ??
+                throw new InvalidOperationException("FAKE_OWNER environment variable is not set."),
+            CreatedDt = DateTime.Now,
+            Status = 1,   
+            AIReportIndexId = new Guid("115e86e0-f88f-42d5-ab71-3830f335c2b5"),
         };
 
-        Console.WriteLine($"Created payload with AIRequestId: {payload.AIRequestId}");
+        Console.WriteLine($"Created payload with AIRequestId: {payload.Id}");
 
         // Save payload to DB + send minimal message (via PayloadProcessor)
         await PayloadProcessor.ProcessPayloadAsync(payload);
@@ -253,8 +263,8 @@ class Program
         // Simulate receiving the message from Service Bus
         return new ServiceBusRequestMessage
         {
-            TenantId = payload.TenantId,
-            AIRequestId = payload.AIRequestId
+            TenantId = new Guid(payload.CreatedById),
+            AIRequestId = payload.Id
         };
     }
 }

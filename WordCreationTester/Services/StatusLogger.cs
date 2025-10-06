@@ -4,13 +4,13 @@ namespace WordCreationTester.Services
 {
     public static class StatusLogger
     {
-        public static async Task LogStatusAsync(Guid aiRequestId, string status, string description)
+        public static async Task LogStatusAsync(Guid aiRequestId, int status, string description)
         {
             var config = AIConfig.FromEnvironment();
 
             using var dbContext = new PayloadDbConnection(config);
 
-            var request = await dbContext.AIReportRequests.FindAsync(aiRequestId);
+            var request = await dbContext.AIReportRequest.FindAsync(aiRequestId);
             if (request == null)
             {
                 Console.WriteLine($"[Status] Failed to log status. Request {aiRequestId} not found.");
@@ -18,7 +18,7 @@ namespace WordCreationTester.Services
             }
 
             request.Status = status;
-            request.StatusDescription = description;
+            request.Outcome = description;
 
             await dbContext.SaveChangesAsync();
 
