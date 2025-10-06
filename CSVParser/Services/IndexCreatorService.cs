@@ -35,7 +35,7 @@ namespace CsvParser.Services
         public async Task<bool> CreateIndex(string indexName)
         {
             // Azure Cognitive Search service and related configuration
-            string searchServiceName = "swintesting-ai-programmatic-showcase";
+            string searchServiceName = $"{_settings.TenantId}-ai-search-reports"; // This name matches the exact format of the ARM template
             string dataSourceName = $"{indexName}-data-source";
             string skillsetName = $"{indexName}-skillset";
             string indexerName = $"{indexName}-indexer";

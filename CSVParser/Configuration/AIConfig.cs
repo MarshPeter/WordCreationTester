@@ -16,6 +16,7 @@
         public string SearchKey { get; }
         public string BlobConnectionString { get; }
         public string DbConnectionString { get; }
+        public string TenantId { get; }
 
         public AIConfig()
         {
@@ -31,9 +32,6 @@
             EmbedAIKey = Environment.GetEnvironmentVariable("EMBED_MODEL_KEY")
                 ?? throw new InvalidOperationException("Missing EMBED_MODEL_KEY");
 
-            SearchEndpoint = Environment.GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT")
-                ?? throw new InvalidOperationException("Missing AZURE_AI_SEARCH_ENDPOINT");
-
             SearchKey = Environment.GetEnvironmentVariable("AZURE_SEARCH_API_KEY")
                 ?? throw new InvalidOperationException("Missing AZURE_SEARCH_API_KEY");
 
@@ -42,6 +40,11 @@
 
             DbConnectionString = Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")
                 ?? throw new InvalidOperationException("Missing DB_CONNECTION_STRING");
+
+            TenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID")
+                ?? throw new InvalidOperationException("Missing AZURE_TENANT_ID");
+
+            SearchEndpoint = $"https://{TenantId}-ai-search-reports.search.windows.net";
         }
 
     }

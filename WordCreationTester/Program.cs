@@ -108,19 +108,22 @@ class Program
         The title should be derived from the original message. 
 
         The content of your report should be mindful of the following: 
+        - The report should be focused on the search request.
         - The report should be detailed. 
         - Maintain a formal, clear, and professional tone.
         - If you are unsure or cannot find the information, respond with "No data found".
         - Do not include any document tags or additional information.
         - You should only ever use straight quotes, no curly quotes. 
+        - You should use any information within the data source to generate your report
         """;
 
         string reportContent;
 
         try
         {
+            // TODO: Change searchINdex to be retrieved from the actual name. 
             // Run the AI to generate the initial raw report content
-            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, "my-index", outputFormat: OutputFormat.PlainText);
+            reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, index.IndexName, outputFormat: OutputFormat.PlainText);
 
         }
         catch (Exception ex)
@@ -236,7 +239,7 @@ class Program
                 throw new InvalidOperationException("FAKE_OWNER environment variable is not set."),
             CreatedDt = DateTime.Now,
             Status = 1,   
-            AIReportIndexId = new Guid("115e86e0-f88f-42d5-ab71-3830f335c2b5"),
+            AIReportIndexId = new Guid("ae8635ba-1a7a-4b29-90cd-36a203da36a3"),
         };
 
         Console.WriteLine($"Created payload with AIRequestId: {payload.Id}");

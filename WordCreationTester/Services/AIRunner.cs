@@ -33,25 +33,25 @@ namespace WordCreationTester.Services
                     new AzureKeyCredential(config.AIKey)
                 );
 
-                var chatClient = openAIClient.GetChatClient("gpt-4o-mini");
+                var chatClient = openAIClient.GetChatClient(config.LLMAIName);
 #pragma warning disable AOAI001 // Suppress the diagnostic warning
                 var options = new ChatCompletionOptions();
 
                 if (dataSource)
                 {
-                    options.AddDataSource(RetrieveDataSource(config.SearchEndpoint, config.SearchKey, searchIndex));
+                    options.AddDataSource(RetrieveDataSource(config.SearchEndpoint, config.SearchKey, searchIndex, config));
                 }
 
 #pragma warning restore AOAI001 // Suppress the diagnostic warning
-                options.Temperature = 0f;                           //low= control randomness in response 
-                options.TopP = 0.2f;                                //low=  limits token choice for focused output
-                options.FrequencyPenalty = 0.5f;                    //Medium= reduce repeated words
-                options.PresencePenalty = 0.2f;                     //Low = mostly stays on same topics
+                options.Temperature = 0.7f;                          //low= control randomness in response 
+                options.TopP = 0.95f;                                //low=  limits token choice for focused output
+                options.FrequencyPenalty = 0f;                       //Medium= reduce repeated words
+                options.PresencePenalty = 0f;                        //Low = mostly stays on same topics
 
                                                                     // Set max output tokens based on format. JSON needs more tokens due to brackets, quotes, and formatting
                 options.MaxOutputTokenCount = outputFormat == OutputFormat.Json
                     ? 16000                                         // JSON: use full capacity
-                    : 12800;                                        // Plain text: 80% is sufficient
+                    : 12800;                                        // Plain text: 80% as JSON is more token expensive
 
                 var messages = new List<ChatMessage>
                 {
@@ -74,16 +74,18 @@ namespace WordCreationTester.Services
         // But is not seen as stable at this stage according to official documentation. 
 
         // This gives permission to the LLM model to communicate with our AI Search instance
-        private static AzureSearchChatDataSource RetrieveDataSource(string searchEndpoint, string searchKey, string searchIndex)
+        private static AzureSearchChatDataSource RetrieveDataSource(string searchEndpoint, string searchKey, string searchIndex, AIConfig config)
         {
+            Console.WriteLine($"API KEY: {searchKey}");
+            Console.WriteLine($"SEARCH ENDPOINT: {searchEndpoint}");
             return new AzureSearchChatDataSource()
             {
                 Endpoint = new Uri(searchEndpoint),                                                      // Endpoint of Azure Search
                 Authentication = DataSourceAuthentication.FromApiKey(searchKey),                         // Key from Azure Search
                 IndexName = searchIndex,                                                                 // Index from Azure Search
                 QueryType = DataSourceQueryType.VectorSemanticHybrid,                                    // Vector + Semantic Search = Better responses
-                SemanticConfiguration = "my-index-semantic-configuration",                               // Semantic setup
-                VectorizationSource = DataSourceVectorizer.FromDeploymentName("text-embedding-ada-002"), // The Text Embedding LLM Model. This is different from the LLM Model
+                SemanticConfiguration = $"{searchIndex}-semantic-configuration",                         // Semantic setup
+                VectorizationSource = DataSourceVectorizer.FromDeploymentName(config.EmbeddedModelAIName), // The Text Embedding LLM Model. This is different from the LLM Model
                 AllowPartialResults = true,                                                              // This allows for predictable results
             };
         }
