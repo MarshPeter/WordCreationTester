@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CsvParser
 {
+    // TODO: We need to update the status to actually be appropriate lmao. 
     class Program
     {
         static async Task Main(string[] args)
@@ -52,11 +53,6 @@ namespace CsvParser
                         "Contains information about received complaints and complements towards the business",
                         host.Services.GetRequiredService<ComplaintsOrComplimentsCsvExportService>())
                 };
-
-                
-               
-
-
 
                 var azureUploadService = host.Services.GetRequiredService<AzureUploadService>();
                 var duplicateRemovalService = host.Services.GetRequiredService<CsvDuplicateRemovalService>();

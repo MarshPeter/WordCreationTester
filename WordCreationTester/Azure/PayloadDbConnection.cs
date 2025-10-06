@@ -12,8 +12,8 @@ public class PayloadDbConnection : DbContext
         connectionString = config.DbConnectionString ?? throw new InvalidOperationException("DB_CONNECTION_STRING not set");
     }
 
-    public DbSet<AIReportRequestEntity> AIReportRequests { get; set; }
-    public DbSet<AIReportResultEntity> AIReportResults { get; set; }
+    public DbSet<AIReportRequest> AIReportRequest { get; set; }
+    public DbSet<AIReportIndexes> AIReportIndexes { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
@@ -22,15 +22,10 @@ public class PayloadDbConnection : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AIReportRequestEntity>()
-            .HasKey(r => r.AIRequestId);
+        modelBuilder.Entity<AIReportRequest>()
+            .HasKey(r => r.Id);
 
-        modelBuilder.Entity<AIReportResultEntity>()
-            .HasKey(r => r.ResultId);
-
-        modelBuilder.Entity<AIReportResultEntity>()
-            .HasOne<AIReportRequestEntity>()
-            .WithMany()
-            .HasForeignKey(r => r.AIRequestId);
+        modelBuilder.Entity<AIReportIndexes>()
+            .HasKey(r => r.Id);
     }
 }
