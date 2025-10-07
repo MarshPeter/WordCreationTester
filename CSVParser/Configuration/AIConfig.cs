@@ -2,7 +2,7 @@
 {
     public class AIConfig
     {
-        public int CsvMaxRows { get; set; } = 50000;
+
         public int CsvLogEvery { get; set; } = 5000;
         public int CsvMaxFieldChars { get; set; } = 2000;
         public int SqlCommandTimeoutSec { get; set; } = 600;

@@ -1,14 +1,10 @@
-﻿using CsvParser.Interfaces;
-
-
-namespace CsvParser.DTO
-    
-    //Defines the structure of index for CSV export, including its name, display label, description, and the associated export service implementation
+﻿namespace CsvParser.DTO
 {
     public record IndexDefinition(
-        string IndexName,                // This is hard to change on Azure once setup, choose a semantically meaningful name initially and stick with it
+        string IndexName,
         string DisplayName,
         string IndexDescription,
-        ICSVExporter ExportService
+        Type QueryServiceType,  
+        Type RowType            
     );
 }

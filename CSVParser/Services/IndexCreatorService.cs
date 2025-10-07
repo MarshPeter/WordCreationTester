@@ -4,7 +4,6 @@ using CsvParser.Configuration;
 using CsvParser.Data.Models;
 using CsvParser.DTO;
 using CSVParser.Data;
-using CsvParser.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,14 +16,12 @@ namespace CsvParser.Services
     public class IndexCreatorService
     {
         private readonly TMRRadzenContext _dbContext;
-        private readonly ILogger<ICSVExporter> _logger;
+        private readonly ILogger<IndexCreatorService> _logger;
         private readonly AIConfig _settings;
 
-
-        // initializes the service with DB context, logger, and application settings
         public IndexCreatorService(
             TMRRadzenContext dbContext,
-            ILogger<ICSVExporter> logger,
+            ILogger<IndexCreatorService> logger,
             IOptions<AIConfig> settings)
         {
             _dbContext = dbContext;
@@ -35,65 +32,67 @@ namespace CsvParser.Services
         public async Task<bool> CreateIndex(string indexName)
         {
             // Azure Cognitive Search service and related configuration
-            string searchServiceName = $"{_settings.TenantId}-ai-search-reports"; // This name matches the exact format of the ARM template
+            string searchServiceName = $"{_settings.TenantId}-ai-search-reports";
             string dataSourceName = $"{indexName}-data-source";
             string skillsetName = $"{indexName}-skillset";
             string indexerName = $"{indexName}-indexer";
 
             string blobConnectionString = _settings.BlobConnectionString;
-            string containerName = "reports";
+            string containerName = _settings.BlobContainerBaseName;
+
             // Azure OpenAI configuration
             string openAIEndpoint = _settings.LLMAIEndpoint;
             string openAIKey = _settings.LLMAIKey;
-            
-            //THE FOLLOWING CODE IS AN EXAMPLE OF INDEXING CREATION
+
+            // Data source payload - points to the folder in blob storage
+            // The indexer will process ALL CSV files in this folder (handles multiple files automatically!)
             string dataSourcePayload = $@"
 {{
     ""name"": ""{dataSourceName}"",
     ""description"": ""Data source for blob container"",
     ""type"": ""azureblob"",
     ""credentials"": {{ ""connectionString"": ""{blobConnectionString}"" }},
-    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{indexName + '/'}"" }}
+    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{indexName}/"" }}
 }}";
 
-            //// 1. Create Data Source (as before)
+            // 1. Create Data Source
             bool datasourceCreated = await CreateDataSourceAsync(searchServiceName, dataSourcePayload);
 
             if (!datasourceCreated)
             {
-                Console.WriteLine($@"The datasource {dataSourceName} was not created in {searchServiceName}");
+                _logger.LogError("The datasource {DataSourceName} was not created in {SearchServiceName}",
+                    dataSourceName, searchServiceName);
                 return false;
             }
 
-            //// 2.Create Index
+            // 2. Create Index
             bool indexCreated = await CreateIndexAsync(searchServiceName, indexName, openAIEndpoint, openAIKey);
 
             if (!indexCreated)
             {
-                Console.WriteLine($@"The index {dataSourceName} was not created in {searchServiceName}");
+                _logger.LogError("The index {IndexName} was not created in {SearchServiceName}",
+                    indexName, searchServiceName);
 
-                // Clean up already created resources so that it doesn't prevent future index creation
+                // Clean up already created resources
                 await DeleteDataSourceAsync(searchServiceName, dataSourceName);
-
                 return false;
             }
 
-            //// 3.Create Skillset
+            // 3. Create Skillset
             bool skillsetCreated = await CreateSkillsetAsync(searchServiceName, skillsetName, openAIEndpoint, openAIKey, indexName);
 
             if (!skillsetCreated)
             {
-                Console.WriteLine($@"The skillset {dataSourceName} was not created in {searchServiceName}");
+                _logger.LogError("The skillset {SkillsetName} was not created in {SearchServiceName}",
+                    skillsetName, searchServiceName);
 
-                // Clean up already created resources so that it doesn't prevent future index creation
+                // Clean up already created resources
                 await DeleteIndexAsync(searchServiceName, indexName);
                 await DeleteDataSourceAsync(searchServiceName, dataSourceName);
-
                 return false;
             }
 
-
-            //// 4.Create Indexer
+            // 4. Create Indexer
             bool indexerCreated = await CreateIndexerAsync(
                searchServiceName,
                indexerName,
@@ -103,16 +102,17 @@ namespace CsvParser.Services
 
             if (!indexerCreated)
             {
-                Console.WriteLine($@"The indexer {dataSourceName} was not created in {searchServiceName}");
+                _logger.LogError("The indexer {IndexerName} was not created in {SearchServiceName}",
+                    indexerName, searchServiceName);
 
-                // Clean up already created resources so that it doesn't prevent future index creation
+                // Clean up already created resources
                 await DeleteIndexAsync(searchServiceName, indexName);
                 await DeleteDataSourceAsync(searchServiceName, dataSourceName);
                 await DeleteSkillsetAsync(searchServiceName, skillsetName);
-
                 return false;
             }
 
+            _logger.LogInformation("Successfully created complete search index: {IndexName}", indexName);
             return true;
         }
 
@@ -130,9 +130,14 @@ namespace CsvParser.Services
                 // Get name of the indexes being created 
                 var indexNames = createdIndexes.Select(x => x.IndexName).ToList();
 
+                // Get the owner ID from environment
                 // Get existing AIReportIndexes that match the provided index names for this particular tenant
+                string ownerId = Environment.GetEnvironmentVariable("FAKE_OWNER")
+                    ?? throw new InvalidOperationException("FAKE_OWNER environment variable not set");
+
+                // Get existing AIReportIndexes that match the provided index names
                 var existingReportIndexes = await _dbContext.AIReportIndexes
-                    .Where(r => indexNames.Contains(r.IndexName) && r.CreatedById == Environment.GetEnvironmentVariable("FAKE_OWNER"))
+                    .Where(r => indexNames.Contains(r.IndexName) && r.CreatedById == ownerId)
                     .ToListAsync(ct);
 
                 // Create a dictionary for quick lookup of existing report indexes by name
@@ -170,36 +175,53 @@ namespace CsvParser.Services
                     }
                     else
                     {
-                        // Update description if changed
+                        // Update existing index
                         if (reportIndex.IndexDescription != indexDef.IndexDescription)
                         {
                             reportIndex.IndexDescription = indexDef.IndexDescription;
                         }
 
-                        // Update UIDisplay Name if changed
                         if (reportIndex.UIDisplayName != indexDef.DisplayName)
                         {
                             reportIndex.UIDisplayName = indexDef.DisplayName;
                         }
 
-                        // We write here to indicate that the CSV documents will have been updated by this time. 
-                        reportIndex.IndexLastUpdatedDt = DateTime.UtcNow;
+                        // Update timestamp to indicate CSV documents have been refreshed
+                        reportIndex.IndexLastUpdatedDt = now;
+
+                        // Update status
+                        reportIndex.Status = "Updated: CSV data refreshed";
                     }
 
+                    // Only create Azure Search index if this is a new index
                     if (newIndex)
                     {
-                        bool res = await CreateIndex(indexDef.IndexName);
+                        _logger.LogInformation("Creating Azure Search index for: {IndexName}", indexDef.IndexName);
 
-                        if (res)
+                        try
                         {
-                            reportIndex.Status = "Success: Indexes created";
-                        } else
-                        {
-                            reportIndex.Status = "Failed: Index was unable to be created";
+                            bool res = await CreateIndex(indexDef.IndexName);
+
+                            if (res)
+                            {
+                                reportIndex.Status = "Success: Index created";
+                                _logger.LogInformation("Successfully created Azure Search index: {IndexName}", indexDef.IndexName);
+                            }
+                            else
+                            {
+                                reportIndex.Status = "Failed: Index creation failed";
+                                _logger.LogError("Failed to create Azure Search index: {IndexName}", indexDef.IndexName);
+                            }
                         }
-
-                        if (!newlyCreatedIndexes.Contains(indexDef.IndexName))
-                            newlyCreatedIndexes.Add(indexDef.IndexName);
+                        catch (Exception ex)
+                        {
+                            reportIndex.Status = $"Error: {ex.Message}";
+                            _logger.LogError(ex, "Exception while creating Azure Search index: {IndexName}", indexDef.IndexName);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Index already exists, CSV data refreshed: {IndexName}", indexDef.IndexName);
                     }
                 }
 
@@ -209,7 +231,7 @@ namespace CsvParser.Services
                 _logger.LogInformation(
                     "Updated index information for tenant {TenantId}. Newly created indexes: {Indexes}",
                     tenantId,
-                    string.Join(", ", newlyCreatedIndexes));
+                    string.Join(", ", newlyCreatedIndexes.Any() ? newlyCreatedIndexes : new[] { "None (existing indexes updated)" }));
 
                 return true;
             }
@@ -222,8 +244,8 @@ namespace CsvParser.Services
         }
 
         public static async Task<bool> CreateDataSourceAsync(
-        string searchServiceName,
-        string dataSourcePayload)
+            string searchServiceName,
+            string dataSourcePayload)
         {
             // The endpoint for the data source API
             string endpoint = $"https://{searchServiceName}.search.windows.net/datasources?api-version=2024-07-01";
@@ -237,8 +259,8 @@ namespace CsvParser.Services
             using var httpClient = new HttpClient();
 
             // Add auth header and send data source payload to Azure Search
-            httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", token.Token);
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue("Bearer", token.Token);
 
 
             var content = new StringContent(dataSourcePayload, Encoding.UTF8, "application/json");
@@ -262,11 +284,11 @@ namespace CsvParser.Services
         }
         // CreateIndexerAsync creates an Azure Cognitive Search indexer to pull data from a data source
         public static async Task<bool> CreateSkillsetAsync(
-        string searchServiceName,
-        string skillsetName,
-        string openAIEndpoint,
-        string openAIKey,
-        string indexName)
+            string searchServiceName,
+            string skillsetName,
+            string openAIEndpoint,
+            string openAIKey,
+            string indexName)
         {
             string endpoint = $"https://{searchServiceName}.search.windows.net/skillsets/{skillsetName}?api-version=2024-07-01";
 
@@ -376,10 +398,10 @@ namespace CsvParser.Services
         }
         // Create a new Azure Search index with text fields, vector search, and semantic config
         public static async Task<bool> CreateIndexAsync(
-        string searchServiceName,
-        string indexName,
-        string openAIEndpoint,
-        string openAIKey)
+            string searchServiceName,
+            string indexName,
+            string openAIEndpoint,
+            string openAIKey)
         {
             string endpoint = $"https://{searchServiceName}.search.windows.net/indexes/{indexName}?api-version=2024-07-01";
             var algorithmName = $"{indexName}-index-algorithm";
@@ -391,71 +413,71 @@ namespace CsvParser.Services
             string indexPayload = $@"
 {{
   ""name"": ""{indexName}"",
-      ""fields"": [
-        {{
-          ""name"": ""chunk_id"",
-          ""type"": ""Edm.String"",
-          ""searchable"": true,
-          ""filterable"": false,
-          ""retrievable"": true,
-          ""stored"": true,
-          ""sortable"": true,
-          ""facetable"": false,
-          ""key"": true,
-          ""analyzer"": ""keyword"",
-          ""synonymMaps"": []
-        }},
-        {{
-          ""name"": ""parent_id"",
-          ""type"": ""Edm.String"",
-          ""searchable"": false,
-          ""filterable"": true,
-          ""retrievable"": true,
-          ""stored"": true,
-          ""sortable"": false,
-          ""facetable"": false,
-          ""key"": false,
-          ""synonymMaps"": []
-        }},
-        {{
-          ""name"": ""chunk"",
-          ""type"": ""Edm.String"",
-          ""searchable"": true,
-          ""filterable"": false,
-          ""retrievable"": true,
-          ""stored"": true,
-          ""sortable"": false,
-          ""facetable"": false,
-          ""key"": false,
-          ""synonymMaps"": []
-        }},
-        {{
-          ""name"": ""title"",
-          ""type"": ""Edm.String"",
-          ""searchable"": true,
-          ""filterable"": false,
-          ""retrievable"": true,
-          ""stored"": true,
-          ""sortable"": false,
-          ""facetable"": false,
-          ""key"": false,
-          ""synonymMaps"": []
-        }},
-        {{
-          ""name"": ""text_vector"",
-          ""type"": ""Collection(Edm.Single)"",
-          ""searchable"": true,
-          ""filterable"": false,
-          ""retrievable"": true,
-          ""stored"": true,
-          ""sortable"": false,
-          ""facetable"": false,
-          ""key"": false,
-          ""dimensions"": 1536,
-          ""vectorSearchProfile"": ""{profileName}"",
-          ""synonymMaps"": []
-        }}
-      ],
+  ""fields"": [
+    {{
+      ""name"": ""chunk_id"",
+      ""type"": ""Edm.String"",
+      ""searchable"": true,
+      ""filterable"": false,
+      ""retrievable"": true,
+      ""stored"": true,
+      ""sortable"": true,
+      ""facetable"": false,
+      ""key"": true,
+      ""analyzer"": ""keyword"",
+      ""synonymMaps"": []
+    }},
+    {{
+      ""name"": ""parent_id"",
+      ""type"": ""Edm.String"",
+      ""searchable"": false,
+      ""filterable"": true,
+      ""retrievable"": true,
+      ""stored"": true,
+      ""sortable"": false,
+      ""facetable"": false,
+      ""key"": false,
+      ""synonymMaps"": []
+    }},
+    {{
+      ""name"": ""chunk"",
+      ""type"": ""Edm.String"",
+      ""searchable"": true,
+      ""filterable"": false,
+      ""retrievable"": true,
+      ""stored"": true,
+      ""sortable"": false,
+      ""facetable"": false,
+      ""key"": false,
+      ""synonymMaps"": []
+    }},
+    {{
+      ""name"": ""title"",
+      ""type"": ""Edm.String"",
+      ""searchable"": true,
+      ""filterable"": false,
+      ""retrievable"": true,
+      ""stored"": true,
+      ""sortable"": false,
+      ""facetable"": false,
+      ""key"": false,
+      ""synonymMaps"": []
+    }},
+    {{
+      ""name"": ""text_vector"",
+      ""type"": ""Collection(Edm.Single)"",
+      ""searchable"": true,
+      ""filterable"": false,
+      ""retrievable"": true,
+      ""stored"": true,
+      ""sortable"": false,
+      ""facetable"": false,
+      ""key"": false,
+      ""dimensions"": 1536,
+      ""vectorSearchProfile"": ""{profileName}"",
+      ""synonymMaps"": []
+    }}
+  ],
   ""scoringProfiles"": [],
   ""suggesters"": [],
   ""analyzers"": [],
