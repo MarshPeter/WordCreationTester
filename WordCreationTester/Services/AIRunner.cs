@@ -76,8 +76,6 @@ namespace WordCreationTester.Services
         // This gives permission to the LLM model to communicate with our AI Search instance
         private static AzureSearchChatDataSource RetrieveDataSource(string searchEndpoint, string searchKey, string searchIndex, AIConfig config)
         {
-            Console.WriteLine($"API KEY: {searchKey}");
-            Console.WriteLine($"SEARCH ENDPOINT: {searchEndpoint}");
             return new AzureSearchChatDataSource()
             {
                 Endpoint = new Uri(searchEndpoint),                                                      // Endpoint of Azure Search

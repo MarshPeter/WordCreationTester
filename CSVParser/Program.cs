@@ -105,7 +105,7 @@ namespace CsvParser
                     csvPath = await ProcessDuplicates(csvPath, duplicateRemover, logger);
                     logger.LogInformation("✓ Deduplication complete");
 
-                    // Step 4: Split using generic service
+                    // Step 4: Split files up if they are too large using generic service
                     var filePaths = await csvSplitter.SplitCsvFileAsync(csvPath);
                     logger.LogInformation("✓ Split into {Count} file(s)", filePaths.Count);
 
@@ -114,7 +114,7 @@ namespace CsvParser
                     foreach (var file in filePaths)
                     {
                         await azureUploader.UploadFileAsync(file, Path.GetFileName(file), idx.IndexName);
-                        logger.LogInformation("  → Uploaded: {FileName}", Path.GetFileName(file));
+                        logger.LogInformation("Uploaded: {FileName}", Path.GetFileName(file));
                     }
                     logger.LogInformation("✓ Uploaded {Count} file(s)", filePaths.Count);
 
