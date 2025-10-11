@@ -14,8 +14,10 @@ namespace CsvParser
 {
     class Program
     {
+
         static async Task Main(string[] args)
         {
+
             var host = CreateHostBuilder(args).Build();
 
             string? tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");

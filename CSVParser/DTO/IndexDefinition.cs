@@ -1,5 +1,4 @@
-﻿using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-
+﻿
 namespace CsvParser.DTO
 {
 
