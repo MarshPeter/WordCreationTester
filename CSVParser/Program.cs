@@ -1,7 +1,6 @@
 ﻿using CsvParser.Configuration;
 using CsvParser.DTO;
 using CsvParser.Services;
-using CsvParser.Data.Models;
 using CSVParser.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using CsvParser.QueryTemplates;
+using CsvParser.Data.AIReportQueryRow;
 
 namespace CsvParser
 {
@@ -177,6 +177,7 @@ namespace CsvParser
             }
         }
 
+        // Analyzes and removes duplicate rows from CSV file, replacing original if duplicates found
         private static async Task<string> ProcessDuplicates(
             string csvPath,
             CsvDuplicateRemovalService remover,
@@ -209,6 +210,7 @@ namespace CsvParser
             return csvPath;
         }
 
+        // Configures dependency injection and registers all services
         static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((context, services) =>

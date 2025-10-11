@@ -3,11 +3,26 @@
     public class AIConfig
     {
 
+        //query templates settings
+        public int SqlCommandTimeoutSec { get; set; } = 600;
+
+
+        // csv exporter/duplicate removal settings
         public int CsvLogEvery { get; set; } = 5000;
         public int CsvMaxFieldChars { get; set; } = 2000;
-        public int SqlCommandTimeoutSec { get; set; } = 600;
         public string OutputDirectory { get; set; } = "./docs/temp_csv";
+
+
+        // csv splitter setings
+        public long MaxFileSizeBytes { get; set; } = 12 * 1024 * 1024; // 12 MB limit
+        public int SizeCheckInterval { get; set; } = 5000; // Check size before crate new part file, every N rows
+
+
+       // uploader setings
         public string BlobContainerBaseName { get; set; } = "reports";
+
+
+
         public string LLMAIEndpoint { get; }
         public string LLMAIKey { get; }
         public string EmbedAIEndpoint { get; }
@@ -17,6 +32,7 @@
         public string BlobConnectionString { get; }
         public string DbConnectionString { get; }
         public string TenantId { get; }
+
 
         public AIConfig()
         {

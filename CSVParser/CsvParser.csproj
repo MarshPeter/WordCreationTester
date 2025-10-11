@@ -17,5 +17,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.9" />
   </ItemGroup>
+<ItemGroup>
+    <!-- Exclude template files from compilation -->
+    <Compile Remove="Templates\**\*.cs" />
+    <None Include="Templates\**\*.cs" />
+  </ItemGroup>
 
 </Project>

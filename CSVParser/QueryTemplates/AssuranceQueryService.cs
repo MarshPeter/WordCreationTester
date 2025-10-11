@@ -2,10 +2,11 @@
 using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
-using CsvParser.Data.Models;
+using CsvParser.Data.AIReportQueryRow;
 
 namespace CsvParser.QueryTemplates
 {
+    // Retrieves assurance submission data by joining structured and unstructured responses with related metadata
     public class AssuranceQueryService
     {
         private readonly TMRRadzenContext _dbContext;

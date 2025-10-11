@@ -1,4 +1,4 @@
-﻿namespace CsvParser.Data.Models
+﻿namespace CsvParser.Data.AIReportQueryRow
 {
     public class AssuranceCsvRow
     {
