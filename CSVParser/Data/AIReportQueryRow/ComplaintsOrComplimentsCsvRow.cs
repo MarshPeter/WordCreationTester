@@ -1,6 +1,10 @@
 ﻿using System;
 
+<<<<<<<< HEAD:CSVParser/DTO/ComplaintsOrComplimentsCsvRow.cs
 namespace CsvParser.DTO
+========
+namespace CsvParser.Data.AIReportQueryRow
+>>>>>>>> csv-separation-2:CSVParser/Data/AIReportQueryRow/ComplaintsOrComplimentsCsvRow.cs
 {
     public class ComplaintsOrComplimentsCsvRow
     {

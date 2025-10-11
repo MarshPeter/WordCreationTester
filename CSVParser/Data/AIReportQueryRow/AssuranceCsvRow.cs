@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:CSVParser/DTO/AssuranceCsvRow.cs
 ﻿namespace CsvParser.DTO
+========
+﻿namespace CsvParser.Data.AIReportQueryRow
+>>>>>>>> csv-separation-2:CSVParser/Data/AIReportQueryRow/AssuranceCsvRow.cs
 {
     public class AssuranceCsvRow
     {

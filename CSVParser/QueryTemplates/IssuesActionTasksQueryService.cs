@@ -2,10 +2,12 @@
 using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
-using CsvParser.DTO;
+using CsvParser.Data.AIReportQueryRow;
 
 namespace CsvParser.QueryTemplates
 {
+
+    // Retrieves issues, actions, and tasks data with status mapping and related metadata
     public class IssuesActionTasksQueryService
     {
         private readonly TMRRadzenContext _dbContext;

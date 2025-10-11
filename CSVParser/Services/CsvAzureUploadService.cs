@@ -10,6 +10,8 @@ namespace CsvParser.Services
         private readonly ILogger<CsvAzureUploadService> _logger;
         private readonly AIConfig _settings;
 
+
+        // Manages uploading CSV files to Azure Blob Storage and clearing index-specific folders
         public CsvAzureUploadService(ILogger<CsvAzureUploadService> logger, IOptions<AIConfig> settings)
         {
             _logger = logger;
@@ -44,8 +46,8 @@ namespace CsvParser.Services
             _logger.LogInformation("Deleted {Count} existing blob(s) from {IndexName} folder", deletedCount, indexName);
         }
 
-        // Uploads a file to Azure Blob Storage WITHOUT clearing the folder first
-       
+        // Uploads a file to Azure Blob Storage in the specified index folder
+
         public async Task UploadFileAsync(string filePath, string blobName, string indexName)
         {
             string connectionString = _settings.BlobConnectionString;

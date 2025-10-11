@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:CSVParser/DTO/IssuesActionTasksCsvRow.cs
 ﻿namespace CsvParser.DTO
+========
+﻿namespace CsvParser.Data.AIReportQueryRow
+>>>>>>>> csv-separation-2:CSVParser/Data/AIReportQueryRow/IssuesActionTasksCsvRow.cs
 {
     public class IssuesActionTasksCsvRow
     {

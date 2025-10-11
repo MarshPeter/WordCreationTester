@@ -19,6 +19,7 @@ namespace CsvParser.Services
         private readonly ILogger<IndexCreatorService> _logger;
         private readonly AIConfig _settings;
 
+        // Creates and manages Azure Cognitive Search indexes, data sources, skillsets, and indexers
         public IndexCreatorService(
             TMRRadzenContext dbContext,
             ILogger<IndexCreatorService> logger,
@@ -29,6 +30,7 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
+        // Creates a complete Azure Search index with data source, skillset, and indexer
         public async Task<bool> CreateIndex(string indexName)
         {
             // Azure Cognitive Search service and related configuration
@@ -116,6 +118,7 @@ namespace CsvParser.Services
             return true;
         }
 
+        // Updates or creates database records for Azure Search indexes
         public async Task<bool> UpdateDatabaseIndexInformation(
             List<IndexDefinition> createdIndexes,
             string tenantId,
@@ -243,6 +246,7 @@ namespace CsvParser.Services
             }
         }
 
+        // Creates an Azure Search data source pointing to blob storage
         public static async Task<bool> CreateDataSourceAsync(
             string searchServiceName,
             string dataSourcePayload)

@@ -12,6 +12,7 @@ namespace CsvParser.Services
         private readonly ILogger<CsvExportService> _logger;
         private readonly AIConfig _settings;
 
+        // Exports database query results to CSV files with configurable field truncation
         public CsvExportService(
             ILogger<CsvExportService> logger,
             IOptions<AIConfig> settings)
@@ -20,9 +21,8 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-        /// <summary>
-        /// Generic CSV export - works with any IQueryable
-        /// </summary>
+        // Exports an any IQueryable to a CSV file with proper escaping and formatting
+
         public async Task<string> ExportToCSV<T>(
             IQueryable<T> query,
             string outputFilePath,
@@ -87,6 +87,7 @@ namespace CsvParser.Services
             return outputFilePath;
         }
 
+        // Converts various data types to string with proper formatting
         private static string ConvertToString(object? value) =>
             value switch
             {
@@ -97,6 +98,7 @@ namespace CsvParser.Services
                 _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty
             };
 
+        // Escapes special CSV characters by wrapping in quotes and doubling internal quotes
         private static string EscapeCsv(string? s)
         {
             if (string.IsNullOrEmpty(s)) return string.Empty;

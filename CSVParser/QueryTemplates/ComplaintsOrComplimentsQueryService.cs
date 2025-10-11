@@ -2,10 +2,12 @@
 using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
-using CsvParser.DTO;
+using CsvParser.Data.AIReportQueryRow;
+
 
 namespace CsvParser.QueryTemplates
 {
+    // Retrieves complaints or compliments data with associated comments
     public class ComplaintsOrComplimentsQueryService
     {
         private readonly TMRRadzenContext _dbContext;

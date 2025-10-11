@@ -7,12 +7,11 @@ namespace CsvParser.Services
 {
     public class CsvSplitterService
     {
-        private const long MAX_FILE_SIZE_BYTES = 12 * 500; // 12 MB
-        private const int SIZE_CHECK_INTERVAL = 50; // Check size every N rows
 
         private readonly ILogger<CsvSplitterService> _logger;
         private readonly AIConfig _settings;
 
+        // Splits large CSV files into multiple smaller files at the configured size limit on SizeCheckIntervals
         public CsvSplitterService(
             ILogger<CsvSplitterService> logger,
             IOptions<AIConfig> settings)
@@ -21,7 +20,7 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-        // Splits a large CSV file into multiple smaller files at the 12MB mark
+        // Splits a CSV file into multiple parts if it exceeds the maximum file size
         public async Task<List<string>> SplitCsvFileAsync(
             string inputFilePath,
             CancellationToken ct = default)
@@ -32,8 +31,8 @@ namespace CsvParser.Services
             var outputFiles = new List<string>();
             var fileInfo = new FileInfo(inputFilePath);
 
-            // If file is under 12MB, no need to split
-            if (fileInfo.Length < MAX_FILE_SIZE_BYTES)
+            // If file is under the size limit, no need to split
+            if (fileInfo.Length < _settings.MaxFileSizeBytes)
             {
                 _logger.LogInformation(
                     "File {FileName} is {SizeMB:F2} MB, no splitting needed",
@@ -64,7 +63,7 @@ namespace CsvParser.Services
                 if (string.IsNullOrEmpty(headerLine))
                     throw new InvalidDataException("CSV file appears to be empty or missing header");
 
-                // CHANGED: Always create part files with different names (never reuse input filename)
+                // Always create part files with different names (never reuse input filename)
                 var currentFilePath = GetPartFilePath(inputFilePath, partNumber, alwaysAddSuffix: true);
                 (currentStream, currentWriter) = await StartNewPartFileAsync(currentFilePath, headerLine);
                 outputFiles.Add(currentFilePath);
@@ -82,12 +81,12 @@ namespace CsvParser.Services
                     totalRowsProcessed++;
 
                     // Check file size periodically
-                    if (rowsInCurrentFile % SIZE_CHECK_INTERVAL == 0)
+                    if (rowsInCurrentFile % _settings.SizeCheckInterval == 0)
                     {
                         await currentWriter.FlushAsync();
 
                         // Check if current file exceeds size limit
-                        if (currentStream.Length >= MAX_FILE_SIZE_BYTES)
+                        if (currentStream.Length >= _settings.MaxFileSizeBytes)
                         {
                             _logger.LogInformation(
                                 "Part {PartNumber} reached {SizeMB:F2} MB with {Rows} rows. Starting new part...",
@@ -137,10 +136,9 @@ namespace CsvParser.Services
                     await currentStream.DisposeAsync();
                 }
             }
-
-            // NOTE: Original input file is NOT deleted - let Program.cs handle cleanup
         }
 
+        // Creates a new part file and writes the CSV header
         private static async Task<(FileStream, StreamWriter)> StartNewPartFileAsync(
             string filePath,
             string headerLine)
@@ -154,13 +152,14 @@ namespace CsvParser.Services
             return (fs, sw);
         }
 
+        // Generates file path for a part file with optional suffix to avoid filename conflicts
         private static string GetPartFilePath(string baseFilePath, int partNumber, bool alwaysAddSuffix = false)
         {
             var directory = Path.GetDirectoryName(baseFilePath);
             var fileName = Path.GetFileNameWithoutExtension(baseFilePath);
             var extension = Path.GetExtension(baseFilePath);
 
-            // CHANGED: Always add suffix if requested (to avoid filename conflicts)
+            // Always add suffix if requested (to avoid filename conflicts)
             if (alwaysAddSuffix)
             {
                 return Path.Combine(directory!, $"{fileName}-part{partNumber}{extension}");
