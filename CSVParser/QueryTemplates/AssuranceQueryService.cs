@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
-using CsvParser.Data.AIReportQueryRow;
+using CsvParser.DTO;
 
 namespace CsvParser.QueryTemplates
 {
