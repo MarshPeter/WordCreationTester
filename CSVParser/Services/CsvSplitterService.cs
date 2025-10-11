@@ -7,8 +7,8 @@ namespace CsvParser.Services
 {
     public class CsvSplitterService
     {
-        private const long MAX_FILE_SIZE_BYTES = 12 * 1024 * 1024; // 12 MB
-        private const int SIZE_CHECK_INTERVAL = 5000; // Check size every N rows
+        private const long MAX_FILE_SIZE_BYTES = 12 * 500; // 12 MB
+        private const int SIZE_CHECK_INTERVAL = 50; // Check size every N rows
 
         private readonly ILogger<CsvSplitterService> _logger;
         private readonly AIConfig _settings;
