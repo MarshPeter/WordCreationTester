@@ -4,6 +4,7 @@ using CsvParser.Configuration;
 using CsvParser.Data.Models;
 using CsvParser.DTO;
 using CSVParser.Data;
+using CSVParser.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -30,100 +31,20 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-        // Creates a complete Azure Search index with data source, skillset, and indexer
-        public async Task<bool> CreateIndex(string indexName)
-        {
-            // Azure Cognitive Search service and related configuration
-            string searchServiceName = $"{_settings.TenantId}-ai-search-reports";
-            string dataSourceName = $"{indexName}-data-source";
-            string skillsetName = $"{indexName}-skillset";
-            string indexerName = $"{indexName}-indexer";
-
-            string blobConnectionString = _settings.BlobConnectionString;
-            string containerName = _settings.BlobContainerBaseName;
-
-            // Azure OpenAI configuration
-            string openAIEndpoint = _settings.LLMAIEndpoint;
-            string openAIKey = _settings.LLMAIKey;
-
-            // Data source payload - points to the folder in blob storage
-            // The indexer will process ALL CSV files in this folder (handles multiple files automatically!)
-            string dataSourcePayload = $@"
-{{
-    ""name"": ""{dataSourceName}"",
-    ""description"": ""Data source for blob container"",
-    ""type"": ""azureblob"",
-    ""credentials"": {{ ""connectionString"": ""{blobConnectionString}"" }},
-    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{indexName}/"" }}
-}}";
-
-            // 1. Create Data Source
-            bool datasourceCreated = await CreateDataSourceAsync(searchServiceName, dataSourcePayload);
-
-            if (!datasourceCreated)
-            {
-                _logger.LogError("The datasource {DataSourceName} was not created in {SearchServiceName}",
-                    dataSourceName, searchServiceName);
-                return false;
-            }
-
-            // 2. Create Index
-            bool indexCreated = await CreateIndexAsync(searchServiceName, indexName, openAIEndpoint, openAIKey);
-
-            if (!indexCreated)
-            {
-                _logger.LogError("The index {IndexName} was not created in {SearchServiceName}",
-                    indexName, searchServiceName);
-
-                // Clean up already created resources
-                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
-                return false;
-            }
-
-            // 3. Create Skillset
-            bool skillsetCreated = await CreateSkillsetAsync(searchServiceName, skillsetName, openAIEndpoint, openAIKey, indexName);
-
-            if (!skillsetCreated)
-            {
-                _logger.LogError("The skillset {SkillsetName} was not created in {SearchServiceName}",
-                    skillsetName, searchServiceName);
-
-                // Clean up already created resources
-                await DeleteIndexAsync(searchServiceName, indexName);
-                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
-                return false;
-            }
-
-            // 4. Create Indexer
-            bool indexerCreated = await CreateIndexerAsync(
-               searchServiceName,
-               indexerName,
-               dataSourceName,
-               skillsetName,
-               indexName);
-
-            if (!indexerCreated)
-            {
-                _logger.LogError("The indexer {IndexerName} was not created in {SearchServiceName}",
-                    indexerName, searchServiceName);
-
-                // Clean up already created resources
-                await DeleteIndexAsync(searchServiceName, indexName);
-                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
-                await DeleteSkillsetAsync(searchServiceName, skillsetName);
-                return false;
-            }
-
-            _logger.LogInformation("Successfully created complete search index: {IndexName}", indexName);
-            return true;
-        }
-
         // Updates or creates database records for Azure Search indexes
         public async Task<bool> UpdateDatabaseIndexInformation(
             List<IndexDefinition> createdIndexes,
+            List<IndexDefinition> notTenantIndexes,
             string tenantId,
             CancellationToken ct = default)
         {
+            // First remove any indexes that no longer are applied for this tenant. 
+            var indexResourcesToClear = await CleanUpNonTenantIndexResources(notTenantIndexes, tenantId);
+
+            // Clear now unused resources for any indexes that are removed from this tenant
+            await DeleteRemovedIndexes(indexResourcesToClear);
+
+
             using var transaction = await _dbContext.Database.BeginTransactionAsync(ct);
 
             var newlyCreatedIndexes = new List<string>();
@@ -244,6 +165,189 @@ namespace CsvParser.Services
                 _logger.LogError(ex, "Error updating index information for tenant {TenantId}", tenantId);
                 return false;
             }
+        }
+
+        // This method is for if tenants had indexes at one point in time, but the index has been changed or removed. 
+        public async Task<List<string>> CleanUpNonTenantIndexResources(
+            List<IndexDefinition> notTenantIndexes,
+            string tenantId,
+            CancellationToken ct = default)
+        {
+
+            Console.WriteLine($"AIReportRequest type: {typeof(CSVParser.Data.Models.AIReportRequest).Assembly.Location}");
+
+            foreach (var prop in _dbContext.Model.FindEntityType(typeof(CSVParser.Data.Models.AIReportRequest)).GetProperties())
+                Console.WriteLine(prop.Name);
+
+            var entity = _dbContext.Model.FindEntityType(typeof(CSVParser.Data.Models.AIReportRequest));
+            Console.WriteLine($"Full entity type name: {entity.Name}");
+            Console.WriteLine($"Assembly-qualified name: {typeof(CSVParser.Data.Models.AIReportRequest).AssemblyQualifiedName}");
+
+            foreach (var prop in _dbContext.Model.FindEntityType(typeof(AIReportRequest)).GetProperties())
+            {
+                Console.WriteLine($"{prop.Name}     from {prop.DeclaringType.Name}");
+            }
+
+            if (notTenantIndexes == null || notTenantIndexes.Count == 0)
+                return new List<string>();
+
+            // This is so we remove any indexes on the AISearchService that are no longer included for this tenant. 
+            List<string> indexNamesToDelete;
+
+            using var transaction = await _dbContext.Database.BeginTransactionAsync(ct);
+
+            try
+            {
+                // Collect the names of indexes we want to clean up
+                indexNamesToDelete = notTenantIndexes
+                    .Select(x => x.IndexName)
+                    .ToList();
+
+                // Find all indexes in the DB that match those names
+                var indexEntities = await _dbContext.AIReportIndexes
+                    .Where(i => indexNamesToDelete.Contains(i.IndexName))
+                    .ToListAsync(ct);
+
+                if (indexEntities.Count == 0)
+                {
+                    await transaction.RollbackAsync(ct);
+                    return new List<string>();  // Return this instead of indexNamesToDelete, because this point means that the indexes don't exist for this tenant. 
+                }
+
+                // Get all related AIReportRequest entries for those indexes
+                var indexIds = indexEntities.Select(i => i.Id).ToList();
+                var relatedRequests = await _dbContext.AIReportRequest
+                    .Where(r => indexIds.Contains(r.AIReportIndexId))
+                    .ToListAsync(ct);
+
+                if (relatedRequests.Count > 0)
+                {
+                    _dbContext.AIReportRequest.RemoveRange(relatedRequests);
+                }
+
+                // Remove the index records themselves
+                _dbContext.AIReportIndexes.RemoveRange(indexEntities);
+
+                // Save and commit
+                await _dbContext.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(ct);
+
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+
+            return indexNamesToDelete;
+        }
+
+        // Creates a complete Azure Search index with data source, skillset, and indexer
+        public async Task<bool> CreateIndex(string indexName)
+        {
+            // Azure Cognitive Search service and related configuration
+            string searchServiceName = $"{_settings.TenantId}-ai-search-reports";
+            string dataSourceName = $"{indexName}-data-source";
+            string skillsetName = $"{indexName}-skillset";
+            string indexerName = $"{indexName}-indexer";
+
+            string blobConnectionString = _settings.BlobConnectionString;
+            string containerName = _settings.BlobContainerBaseName;
+
+            // Azure OpenAI configuration
+            string openAIEndpoint = _settings.LLMAIEndpoint;
+            string openAIKey = _settings.LLMAIKey;
+
+            // Data source payload - points to the folder in blob storage
+            // The indexer will process ALL CSV files in this folder (handles multiple files automatically!)
+            string dataSourcePayload = $@"
+{{
+    ""name"": ""{dataSourceName}"",
+    ""description"": ""Data source for blob container"",
+    ""type"": ""azureblob"",
+    ""credentials"": {{ ""connectionString"": ""{blobConnectionString}"" }},
+    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{indexName}/"" }}
+}}";
+
+            // 1. Create Data Source
+            bool datasourceCreated = await CreateDataSourceAsync(searchServiceName, dataSourcePayload);
+
+            if (!datasourceCreated)
+            {
+                _logger.LogError("The datasource {DataSourceName} was not created in {SearchServiceName}",
+                    dataSourceName, searchServiceName);
+                return false;
+            }
+
+            // 2. Create Index
+            bool indexCreated = await CreateIndexAsync(searchServiceName, indexName, openAIEndpoint, openAIKey);
+
+            if (!indexCreated)
+            {
+                _logger.LogError("The index {IndexName} was not created in {SearchServiceName}",
+                    indexName, searchServiceName);
+
+                // Clean up already created resources
+                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
+                return false;
+            }
+
+            // 3. Create Skillset
+            bool skillsetCreated = await CreateSkillsetAsync(searchServiceName, skillsetName, openAIEndpoint, openAIKey, indexName);
+
+            if (!skillsetCreated)
+            {
+                _logger.LogError("The skillset {SkillsetName} was not created in {SearchServiceName}",
+                    skillsetName, searchServiceName);
+
+                // Clean up already created resources
+                await DeleteIndexAsync(searchServiceName, indexName);
+                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
+                return false;
+            }
+
+            // 4. Create Indexer
+            bool indexerCreated = await CreateIndexerAsync(
+               searchServiceName,
+               indexerName,
+               dataSourceName,
+               skillsetName,
+               indexName);
+
+            if (!indexerCreated)
+            {
+                _logger.LogError("The indexer {IndexerName} was not created in {SearchServiceName}",
+                    indexerName, searchServiceName);
+
+                // Clean up already created resources
+                await DeleteIndexAsync(searchServiceName, indexName);
+                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
+                await DeleteSkillsetAsync(searchServiceName, skillsetName);
+                return false;
+            }
+
+            _logger.LogInformation("Successfully created complete search index: {IndexName}", indexName);
+            return true;
+        }
+
+        // This is to remove any indexes that were successfully setup completely in the past, but are no longer to be used. 
+        public async Task DeleteRemovedIndexes(List<string> indexes)
+        {
+            string searchServiceName = $"{_settings.TenantId}-ai-search-reports";
+
+            foreach (string indexName in indexes)
+            {
+                string dataSourceName = $"{indexName}-data-source";
+                string skillsetName = $"{indexName}-skillset";
+                string indexerName = $"{indexName}-indexer";
+
+                await DeleteIndexAsync(searchServiceName, indexName);
+                await DeleteDataSourceAsync(searchServiceName, dataSourceName);
+                await DeleteSkillsetAsync(searchServiceName, skillsetName);
+                await DeleteIndexerAsync(searchServiceName, indexerName);
+            }
+
         }
 
         // Creates an Azure Search data source pointing to blob storage

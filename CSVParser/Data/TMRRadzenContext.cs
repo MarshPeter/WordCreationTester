@@ -17,7 +17,7 @@ public partial class TMRRadzenContext : DbContext
 
     public virtual DbSet<AIReportIndexes> AIReportIndexes { get; set; }
 
-    public virtual DbSet<AIReportRequest> AIReportRequests { get; set; }
+    public virtual DbSet<AIReportRequest> AIReportRequest { get; set; }
 
     public virtual DbSet<AIReportRequest1> AIReportRequests1 { get; set; }
 
@@ -406,6 +406,19 @@ public partial class TMRRadzenContext : DbContext
                 .IsRequired()
                 .HasMaxLength(450);
         });
+
+        modelBuilder.Entity<AIReportRequest>(entity =>
+        {
+            entity.ToTable("AIReportRequest");
+
+            entity.HasKey(r => r.Id);
+
+            entity.HasOne(r => r.AIReportIndex)          // each request has one parent index
+                .WithMany(i => i.AIReportRequests)       // each index has many requests
+                .HasForeignKey(r => r.AIReportIndexId)   // FK property in AIReportRequest
+                .OnDelete(DeleteBehavior.Cascade);       // automatically delete children when parent is deleted
+        });
+
 
         modelBuilder.Entity<AIReportRequest1>(entity =>
         {

@@ -32,37 +32,46 @@ namespace CsvParser
             try
             {
                 // Define indexes with query service types
-                var indexes = new List<IndexDefinition>
-                {
-                    new IndexDefinition(
-                        "assurances",
-                        "Assurances",
-                        "Contains information regarding comments made regarding assurance practices",
-                        typeof(AssuranceQueryService),
-                        typeof(AssuranceCsvRow)),
+                //var indexes = new List<IndexDefinition>
+                //{
+                //    new IndexDefinition(
+                //        "assurances",
+                //        "Assurances",
+                //        "Contains information regarding comments made regarding assurance practices",
+                //        typeof(AssuranceQueryService),
+                //        typeof(AssuranceCsvRow)),
 
-                    new IndexDefinition(
-                        "issues-actions-tasks",
-                        "Issues/Actions/Tasks",
-                        "Contains information about issues, actions, and tasks",
-                        typeof(IssuesActionTasksQueryService),
-                        typeof(IssuesActionTasksCsvRow)),
+                //    new IndexDefinition(
+                //        "issues-actions-tasks",
+                //        "Issues/Actions/Tasks",
+                //        "Contains information about issues, actions, and tasks",
+                //        typeof(IssuesActionTasksQueryService),
+                //        typeof(IssuesActionTasksCsvRow)),
 
-                    new IndexDefinition(
-                        "complaints-and-complements",
-                        "Complaints And Complements",
-                        "Contains information about received complaints and complements",
-                        typeof(ComplaintsOrComplimentsQueryService),
-                        typeof(ComplaintsOrComplimentsCsvRow))
-                };
+                //    new IndexDefinition(
+                //        "complaints-and-complements",
+                //        "Complaints And Complements",
+                //        "Contains information about received complaints and complements",
+                //        typeof(ComplaintsOrComplimentsQueryService),
+                //        typeof(ComplaintsOrComplimentsCsvRow))
+                //};
 
                 // Get generic services
+                var indexSeeder = host.Services.GetRequiredService<IndexSeedingService>();
                 var csvExporter = host.Services.GetRequiredService<CsvExportService>();
                 var duplicateRemover = host.Services.GetRequiredService<CsvDuplicateRemovalService>();
                 var csvSplitter = host.Services.GetRequiredService<CsvSplitterService>();
                 var azureUploader = host.Services.GetRequiredService<CsvAzureUploadService>();
                 var indexer = host.Services.GetRequiredService<IndexCreatorService>();
                 var logger = host.Services.GetRequiredService<ILogger<Program>>();
+
+
+                // TODO: Need to finalize how the seed list is supposed to map to the index list
+                // Simulating a seed List
+                var seeds = new List<string> { "assurances", "issues-actions-tasks", "complaints-and-complements" };
+
+                var indexes = indexSeeder.GetTenantSeededIndexes(seeds);
+                var notTenantIndexes = indexSeeder.GetNonTenantSeededIndexes(seeds);
 
                 logger.LogInformation("Starting CSV export process for {TenantId}...", tenantId);
 
@@ -167,7 +176,7 @@ namespace CsvParser
                     logger.LogInformation("✓ Cleanup complete\n");
                 }
 
-                await indexer.UpdateDatabaseIndexInformation(indexes, tenantId);
+                await indexer.UpdateDatabaseIndexInformation(indexes, notTenantIndexes, tenantId);
                 logger.LogInformation("✓✓✓ All processing complete for {TenantId} ✓✓✓", tenantId);
             }
             catch (Exception ex)
@@ -227,6 +236,7 @@ namespace CsvParser
                     services.AddScoped<CsvSplitterService>();
                     services.AddScoped<CsvAzureUploadService>();
                     services.AddScoped<IndexCreatorService>();
+                    services.AddScoped<IndexSeedingService>();
 
                     // Query services
                     services.AddScoped<AssuranceQueryService>();

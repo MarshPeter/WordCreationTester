@@ -1,4 +1,5 @@
 ﻿#nullable disable
+using CSVParser.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +19,8 @@ namespace CsvParser.Data.Models
         public string CreatedById { get; set; }
         public DateTime CreatedDt { get; set; }
         public string Status { get; set; }
+
+        public virtual ICollection<AIReportRequest> AIReportRequests { get; set; } =
+    new List<AIReportRequest>();
     }
 }
