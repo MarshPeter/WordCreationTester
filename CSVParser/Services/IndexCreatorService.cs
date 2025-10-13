@@ -243,22 +243,11 @@ namespace CsvParser.Services
             string containerName = _settings.BlobContainerBaseName;
 
             // Azure OpenAI configuration
-            string openAIEndpoint = _settings.LLMAIEndpoint;
-            string openAIKey = _settings.LLMAIKey;
-
-            // Data source payload - points to the folder in blob storage
-            // The indexer will process ALL CSV files in this folder (handles multiple files automatically!)
-            string dataSourcePayload = $@"
-{{
-    ""name"": ""{dataSourceName}"",
-    ""description"": ""Data source for blob container"",
-    ""type"": ""azureblob"",
-    ""credentials"": {{ ""connectionString"": ""{blobConnectionString}"" }},
-    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{_settings.TenantReportBaseSubdirectory}/{indexName}/"" }}
-}}";
+            string openAIEndpoint = _settings.OpenAIEndpoint;
+            string openAIKey = _settings.OpenAIKey;
 
             // 1. Create Data Source
-            bool datasourceCreated = await CreateDataSourceAsync(searchServiceName, dataSourcePayload);
+            bool datasourceCreated = await CreateDataSourceAsync(searchServiceName, dataSourceName, indexName);
 
             if (!datasourceCreated)
             {
@@ -338,12 +327,24 @@ namespace CsvParser.Services
         }
 
         // Creates an Azure Search data source pointing to blob storage
-        public static async Task<bool> CreateDataSourceAsync(
+        public async Task<bool> CreateDataSourceAsync(
             string searchServiceName,
-            string dataSourcePayload)
+            string dataSourceName, 
+            string indexName)
         {
             // The endpoint for the data source API
             string endpoint = $"https://{searchServiceName}.search.windows.net/datasources?api-version=2024-07-01";
+
+            // Data source payload - points to the folder in blob storage
+            // The indexer will process ALL CSV files in this folder (handles multiple files automatically!)
+            string dataSourcePayload = $@"
+{{
+    ""name"": ""{dataSourceName}"",
+    ""description"": ""Data source for blob container"",
+    ""type"": ""azureblob"",
+    ""credentials"": {{ ""connectionString"": ""{_settings.BlobConnectionString}"" }},
+    ""container"": {{ ""name"": ""{_settings.BlobContainerBaseName}"", ""query"": ""{_settings.TenantReportBaseSubdirectory}/{indexName}/"" }}
+}}";
 
             // Acquire a token using DefaultAzureCredential
             var credential = new DefaultAzureCredential();

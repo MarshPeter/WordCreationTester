@@ -23,23 +23,23 @@
         public string TenantReportBaseSubdirectory { get; }
 
         // Generic keys, used in multiple services
-        public string LLMAIEndpoint { get; }
-        public string LLMAIKey { get; }
-        public string EmbedAIEndpoint { get; }
-        public string EmbedAIKey { get; }
-        public string SearchEndpoint { get; }
-        public string SearchKey { get; }
-        public string BlobConnectionString { get; }
-        public string DbConnectionString { get; }
-        public string TenantId { get; }
-
+        public string OpenAIEndpoint { get; }       // Used when you need access to general AI features
+        public string OpenAIKey { get; }            // Used when you need access to general AI features
+        public string EmbedAIEndpoint { get; }      // Used when you specifically need access to Embedded AI features, typically for vectorization
+        public string EmbedAIKey { get; }           // Used when you specifically need access to Embedded AI features, typically for vectorization
+        public string SearchEndpoint { get; }       // AI Search Endpoint
+        public string SearchKey { get; }            // AI Search Key
+        public string BlobConnectionString { get; } // Blob storage connection strings
+        public string DbConnectionString { get; }   // Db Connection String
+        public string TenantId { get; }             // Tenant ID. 
+         
 
         public AIConfig()
         {
-            LLMAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
+            OpenAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
                 ?? throw new InvalidOperationException("Missing AZURE_OPENAI_ENDPOINT");
 
-            LLMAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY")
+            OpenAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY")
                 ?? throw new InvalidOperationException("Missing AZURE_OPENAI_API_KEY");
 
             EmbedAIEndpoint = Environment.GetEnvironmentVariable("EMBED_MODEL_ENDPOINT")
