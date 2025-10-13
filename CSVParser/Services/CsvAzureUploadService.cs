@@ -31,7 +31,7 @@ namespace CsvParser.Services
             await containerClient.CreateIfNotExistsAsync();
 
             // Define the "sub-directory" using indexName
-            string subDirectory = indexName + "/";
+            string subDirectory = _settings.TenantReportBaseSubdirectory + "/" + indexName + "/";
 
             _logger.LogInformation("Clearing existing blobs from folder: {IndexName}", indexName);
 
@@ -43,7 +43,7 @@ namespace CsvParser.Services
                 deletedCount++;
             }
 
-            _logger.LogInformation("Deleted {Count} existing blob(s) from {IndexName} folder", deletedCount, indexName);
+            _logger.LogInformation("Deleted {Count} existing blob(s) from {IndexName} folder", deletedCount, subDirectory);
         }
 
         // Uploads a file to Azure Blob Storage in the specified index folder
@@ -58,7 +58,7 @@ namespace CsvParser.Services
             await containerClient.CreateIfNotExistsAsync();
 
             // Define the "sub-directory" using indexName
-            string subDirectory = indexName + "/";
+            string subDirectory = _settings.TenantReportBaseSubdirectory + "/" + indexName + "/";
 
             // Upload file into this "sub-directory"
             string blobPath = subDirectory + blobName; // e.g. "indexA/myfile.csv"

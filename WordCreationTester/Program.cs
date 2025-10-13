@@ -239,7 +239,7 @@ class Program
                 throw new InvalidOperationException("FAKE_OWNER environment variable is not set."),
             CreatedDt = DateTime.Now,
             Status = 1,   
-            AIReportIndexId = new Guid("15c10fdf-a9ff-4b2c-bc59-029fb5c490d4"),
+            AIReportIndexId = new Guid("84cbf429-eac4-4e2c-8aa5-b612e48bdce3"),
         };
 
         Console.WriteLine($"Created payload with AIRequestId: {payload.Id}");

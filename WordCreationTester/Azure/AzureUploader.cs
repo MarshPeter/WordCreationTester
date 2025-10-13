@@ -19,7 +19,8 @@ namespace WordCreationTester.Azure
             var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
             await containerClient.CreateIfNotExistsAsync();
 
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var blobPath = config.TenantId + "/" + blobName;
+            var blobClient = containerClient.GetBlobClient(blobPath);
 
             using FileStream uploadFileStream = File.OpenRead(filePath);
             await blobClient.UploadAsync(uploadFileStream, overwrite: true);

@@ -1,4 +1,7 @@
 namespace CsvParser.Data.AIReportQueryRow
+
+// This is a template for the Qeuery you want to make for a index type, you would pair this with a created Row Template and 
+// Add the types of both to the index list. 
 {
     // TODO: Describe what data this row contains
     public class TemplateCsvRow

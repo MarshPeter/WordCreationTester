@@ -14,15 +14,15 @@
 
 
         // csv splitter setings
-        public long MaxFileSizeBytes { get; set; } = 12 * 1024 * 1024; // 12 MB limit
+        public long MaxFileSizeBytes { get; set; } = 12 * 1024 * 1024; // 12 MB limit (do not set larger, only smaller)
         public int SizeCheckInterval { get; set; } = 5000; // Check size before crate new part file, every N rows
 
 
-       // uploader setings
-        public string BlobContainerBaseName { get; set; } = "reports";
+        // uploader setings
+        public string BlobContainerBaseName { get; } = "reports";
+        public string TenantReportBaseSubdirectory { get; }
 
-
-
+        // Generic keys, used in multiple services
         public string LLMAIEndpoint { get; }
         public string LLMAIKey { get; }
         public string EmbedAIEndpoint { get; }
@@ -61,6 +61,8 @@
                 ?? throw new InvalidOperationException("Missing AZURE_TENANT_ID");
 
             SearchEndpoint = $"https://{TenantId}-ai-search-reports.search.windows.net";
+
+            TenantReportBaseSubdirectory = $"{TenantId}";
         }
 
     }

@@ -56,6 +56,7 @@ namespace CsvParser.Services
 
                 // Get the owner ID from environment
                 // Get existing AIReportIndexes that match the provided index names for this particular tenant
+                // TODO: REPLACE THIS WITH TENANT INDEX - THIS IS A CHEAT FOR OUR SYSTEMS
                 string ownerId = Environment.GetEnvironmentVariable("FAKE_OWNER")
                     ?? throw new InvalidOperationException("FAKE_OWNER environment variable not set");
 
@@ -87,7 +88,7 @@ namespace CsvParser.Services
                             IndexDescription = indexDef.IndexDescription,
                             UIDisplayName = indexDef.DisplayName,
                             IndexLastUpdatedDt = DateTime.UtcNow,
-                            CreatedById = Environment.GetEnvironmentVariable("FAKE_OWNER"),
+                            CreatedById = Environment.GetEnvironmentVariable("FAKE_OWNER"), // TODO: REPLACE THIS WITH TENANT, THIS IS A CHEAT FOR OUR SYsTEM
                             CreatedDt = DateTime.UtcNow,
                             Status = "In Progress: Creating Index"
                         };
@@ -253,7 +254,7 @@ namespace CsvParser.Services
     ""description"": ""Data source for blob container"",
     ""type"": ""azureblob"",
     ""credentials"": {{ ""connectionString"": ""{blobConnectionString}"" }},
-    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{indexName}/"" }}
+    ""container"": {{ ""name"": ""{containerName}"", ""query"": ""{_settings.TenantReportBaseSubdirectory}/{indexName}/"" }}
 }}";
 
             // 1. Create Data Source

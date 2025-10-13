@@ -31,30 +31,6 @@ namespace CsvParser
 
             try
             {
-                // Define indexes with query service types
-                //var indexes = new List<IndexDefinition>
-                //{
-                //    new IndexDefinition(
-                //        "assurances",
-                //        "Assurances",
-                //        "Contains information regarding comments made regarding assurance practices",
-                //        typeof(AssuranceQueryService),
-                //        typeof(AssuranceCsvRow)),
-
-                //    new IndexDefinition(
-                //        "issues-actions-tasks",
-                //        "Issues/Actions/Tasks",
-                //        "Contains information about issues, actions, and tasks",
-                //        typeof(IssuesActionTasksQueryService),
-                //        typeof(IssuesActionTasksCsvRow)),
-
-                //    new IndexDefinition(
-                //        "complaints-and-complements",
-                //        "Complaints And Complements",
-                //        "Contains information about received complaints and complements",
-                //        typeof(ComplaintsOrComplimentsQueryService),
-                //        typeof(ComplaintsOrComplimentsCsvRow))
-                //};
 
                 // Get generic services
                 var indexSeeder = host.Services.GetRequiredService<IndexSeedingService>();
@@ -68,7 +44,7 @@ namespace CsvParser
 
                 // TODO: Need to finalize how the seed list is supposed to map to the index list
                 // Simulating a seed List
-                var seeds = new List<string> { "issues-actions-tasks", "complaints-and-complements" };
+                var seeds = new List<string> { "assurances", "issues-actions-tasks", "complaints-and-complements" };
 
                 var indexes = indexSeeder.GetTenantSeededIndexes(seeds);
                 var notTenantIndexes = indexSeeder.GetNonTenantSeededIndexes(seeds);
