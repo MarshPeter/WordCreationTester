@@ -1,62 +1,29 @@
-﻿using System.Globalization;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
 using CSVParser.Data;
-using CsvParser.Data.Models;
-using CsvParser.Interfaces;
+using CsvParser.DTO;
 
-namespace CsvParser.Services
+namespace CsvParser.QueryTemplates
 {
-    public class AssuranceCsvExportService : ICSVExporter
+    // Retrieves assurance submission data by joining structured and unstructured responses with related metadata
+    public class AssuranceQueryService
     {
         private readonly TMRRadzenContext _dbContext;
-        private readonly ILogger<ICSVExporter> _logger;
         private readonly AIConfig _settings;
 
-        public AssuranceCsvExportService(
+        public AssuranceQueryService(
             TMRRadzenContext dbContext,
-            ILogger<ICSVExporter> logger,
             IOptions<AIConfig> settings)
         {
             _dbContext = dbContext;
-            _logger = logger;
             _settings = settings.Value;
         }
 
-        // Creates csv file in a temporary directory. Returns location of created file. 
-        public async Task<string> ExportCSV(
-            string csvName,
-            string timestamp,
-            CancellationToken ct = default)
+        public IQueryable<AssuranceCsvRow> GetQuery()
         {
-            // Temporary directory to store file until it is uploaded. 
-            Directory.CreateDirectory(_settings.OutputDirectory);
-            string filePath = Path.Combine(
-                _settings.OutputDirectory,
-                $"{csvName}-{timestamp}.csv");
-
             _dbContext.Database.SetCommandTimeout(_settings.SqlCommandTimeoutSec);
 
-            // We limit rows to prevent indexes not being created.
-            var query = BuildAssuranceRowsQuery()
-                .AsNoTracking()
-                .Take(_settings.CsvMaxRows);      // This throws warnings due to undeterministic ordering. This doesn't matter to AI, ignore it.
-
-            await WriteCsvFileAsync(filePath, query, ct);
-
-            _logger.LogInformation(
-                "CSV export complete. File: {file_path}",
-                Path.GetFullPath(filePath));
-
-            return filePath;
-        }
-
-        // Retrieves relevant data from the database using EF. 
-        private IQueryable<AssuranceCsvRow> BuildAssuranceRowsQuery()
-        {
             var structured = from a in _dbContext.AssuranceSubmissionProcesseds
                              join s in _dbContext.AssuranceSubmissionProcessedResponsesStructureds
                                  on a.Id equals s.AssuranceSubmissionProcessedId
@@ -121,80 +88,11 @@ namespace CsvParser.Services
                                    AnswerBGColor = sa != null ? sa.AnswerBGColor : null,
                                    AnswerFGColor = sa != null ? sa.AnswerFGColor : null,
                                    Comment = c != null ? c.Comment : null,
-                                   RiskStandardActName = (string?)null
+                                   RiskStandardActName = null
                                };
 
-            // Unique union essentially
-            return structured.Concat(unstructured);
+            return structured.Concat(unstructured)
+                .AsNoTracking();
         }
-
-        // Takes data from query, and inserts it into a csv file located at filepath
-        private async Task WriteCsvFileAsync<T>(string filePath, IQueryable<T> query, CancellationToken ct)
-        {
-            using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 16);
-            using var sw = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-
-            // Write header
-            var props = typeof(T).GetProperties();
-            for (int i = 0; i < props.Length; i++)
-            {
-                if (i > 0) sw.Write(',');
-                sw.Write(EscapeCsv(props[i].Name));
-            }
-            await sw.WriteLineAsync();
-
-            // Write rows
-            long written = 0;
-            try
-            {
-                await foreach (var row in query.AsAsyncEnumerable().WithCancellation(ct))
-                {
-                    for (int i = 0; i < props.Length; i++)
-                    {
-                        if (i > 0) sw.Write(',');
-                        var val = props[i].GetValue(row);
-                        var s = ConvertToString(val);
-                        if (s.Length > _settings.CsvMaxFieldChars)
-                            s = s.Substring(0, _settings.CsvMaxFieldChars) + "…";
-                        sw.Write(EscapeCsv(s));
-                    }
-                    await sw.WriteLineAsync();
-
-                    written++;
-                    if (written % _settings.CsvLogEvery == 0)
-                    {
-                        await sw.FlushAsync();
-                        _logger.LogInformation("Wrote {RowCount} rows...", written);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during CSV export");
-                throw;
-            }
-
-            await sw.FlushAsync();
-            _logger.LogInformation("CSV export complete. Total rows: {TotalRows}", written);
-        }
-    
-    // Standardize values into specific strings
-    private static string ConvertToString(object? value) =>
-        value switch
-        {
-            null => string.Empty,
-            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-            DateTimeOffset dto => dto.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-            bool b => b ? "true" : "false",
-            _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty
-        };
-
-    // Sanitization
-    private static string EscapeCsv(string? s)
-    {
-        if (string.IsNullOrEmpty(s)) return string.Empty;
-        bool mustQuote = s.IndexOfAny(new[] { ',', '"', '\n', '\r' }) >= 0;
-        return mustQuote ? $"\"{s.Replace("\"", "\"\"")}\"" : s;
-    }
     }
 }

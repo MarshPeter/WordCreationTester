@@ -20,10 +20,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[AIReportRequests]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[AIReportResults]",
          "ObjectType": 0
       },

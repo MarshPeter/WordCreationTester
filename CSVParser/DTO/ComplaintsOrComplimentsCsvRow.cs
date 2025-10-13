@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CsvParser.Data.Models
+﻿namespace CsvParser.DTO
 {
     public class ComplaintsOrComplimentsCsvRow
     {

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using CsvParser.Configuration;
+using System.ComponentModel;
 
 namespace CsvParser.Services
 {
@@ -12,6 +13,8 @@ namespace CsvParser.Services
         private readonly ILogger<CsvDuplicateRemovalService> _logger;
         private readonly AIConfig _settings;
 
+
+        // Analyzes and removes duplicate rows from CSV files based on normalized column values
         public CsvDuplicateRemovalService(
             ILogger<CsvDuplicateRemovalService> logger,
             IOptions<AIConfig> settings)
@@ -20,10 +23,8 @@ namespace CsvParser.Services
             _settings = settings.Value;
         }
 
-       
-        // Remove duplicates from a CSV. A row is a duplicate iff its FULL set of column values
-        // (after normalization) matches a previous row (if keepFirst) or any row (if keepLast).
-      
+
+        // Removes duplicate rows from a CSV file, keeping either first or last occurrence
         public async Task<string> RemoveDuplicatesAsync(
             string inputFilePath,
             string? outputFilePath = null,
@@ -130,9 +131,9 @@ namespace CsvParser.Services
             return outputFilePath!;
         }
 
-    
-        // Analyze duplicates using ALL columns as the key (after normalization).
-     
+
+        // Analyzes duplicate rows in a CSV file and returns statistics
+
         public async Task<DuplicateAnalysisResult> AnalyzeDuplicatesAsync(
             string filePath,
             CancellationToken ct = default)
@@ -175,6 +176,7 @@ namespace CsvParser.Services
 
         // ---------------- helpers: delimiter, parse, normalization ----------------
 
+        // Detects the delimiter character used in a CSV header line
         private static char DetectDelimiter(string headerLine)
         {
             var candidates = new[] { ',', ';', '\t' };
@@ -198,6 +200,7 @@ namespace CsvParser.Services
             return best.Value > 0 ? best.Key : ',';
         }
 
+        // Parses a CSV row into an array of field values, handling quoted fields
         private static string[] ParseCsvRow(string row, char delimiter)
         {
             var result = new List<string>(16);
@@ -227,6 +230,7 @@ namespace CsvParser.Services
 
         private static readonly Regex MultiSpace = new Regex(@"\s+", RegexOptions.Compiled);
 
+        // Normalizes a field value for comparison by trimming, lowercasing, and removing accents
         private static string NormalizeForKey(string? value)
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
@@ -245,6 +249,7 @@ namespace CsvParser.Services
             return sb.ToString().Normalize(NormalizationForm.FormC);
         }
 
+        // Builds a normalized key from all columns in a row for duplicate detection
         private static string BuildNormalizedKeyAllColumns(string[] columns)
         {
             // Use ALL columns
@@ -255,6 +260,7 @@ namespace CsvParser.Services
         }
     }
 
+    // Contains statistics about duplicate rows found in a CSV file
     public class DuplicateAnalysisResult
     {
         public int TotalRows { get; set; }

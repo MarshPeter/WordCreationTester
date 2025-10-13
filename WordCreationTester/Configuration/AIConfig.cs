@@ -4,14 +4,14 @@ namespace WordCreationTester.Configuration
 {
     public class AIConfig
     {
-        public string AIEndpoint { get; }
-        public string AIKey { get; }
-        public string LLMAIName { get; }
-        public string EmbeddedModelAIName { get; }
-        public string SearchEndpoint { get; }
-        public string SearchKey { get; }
-        public string BlobConnectionString { get; }
-        public string DbConnectionString { get; }
+        public string AIEndpoint { get; }           // Key for AI Endpoint
+        public string AIKey { get; }                // Key for Open AI service
+        public string LLMAIName { get; }            // The name of the AI that does the Report Generation
+        public string EmbeddedModelAIName { get; }  // Embeded Model Name, this does vectorization of data for indexes. 
+        public string SearchEndpoint { get; }       // AI Search Endpoint
+        public string SearchKey { get; }            // AI Search Key
+        public string BlobConnectionString { get; } // Blob connection string
+        public string DbConnectionString { get; }   // DB Connection String
         public string TenantId { get; }
 
         public AIConfig(string aiEndpoint, string aiKey, string searchKey, string blobConnectionString, string dbConnectionString, string tenantId)

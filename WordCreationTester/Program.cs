@@ -235,11 +235,11 @@ class Program
             FromDt = new DateTime(2020, 01, 01),
             ToDt = DateTime.UtcNow.Date,
             ReportParametersJSON = JsonSerializer.Serialize(new[] { userMessage }),
-            CreatedById = Environment.GetEnvironmentVariable("FAKE_OWNER") ??
+            CreatedById = Environment.GetEnvironmentVariable("FAKE_OWNER") ??   // TODO: Replace this with actual Tenant. 
                 throw new InvalidOperationException("FAKE_OWNER environment variable is not set."),
             CreatedDt = DateTime.Now,
             Status = 1,   
-            AIReportIndexId = new Guid("ae8635ba-1a7a-4b29-90cd-36a203da36a3"),
+            AIReportIndexId = new Guid("84cbf429-eac4-4e2c-8aa5-b612e48bdce3"),
         };
 
         Console.WriteLine($"Created payload with AIRequestId: {payload.Id}");

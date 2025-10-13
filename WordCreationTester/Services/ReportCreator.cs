@@ -27,9 +27,6 @@ namespace WordCreationTester.Services
                 if (report.Count == 0)
                     throw new InvalidOperationException("No report sections were provided.");
 
-
-
-
                 // Create a new Word document instance
                 var doc = new Document();
 
