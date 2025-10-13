@@ -68,7 +68,7 @@ namespace CsvParser
 
                 // TODO: Need to finalize how the seed list is supposed to map to the index list
                 // Simulating a seed List
-                var seeds = new List<string> { "assurances", "issues-actions-tasks", "complaints-and-complements" };
+                var seeds = new List<string> { "issues-actions-tasks", "complaints-and-complements" };
 
                 var indexes = indexSeeder.GetTenantSeededIndexes(seeds);
                 var notTenantIndexes = indexSeeder.GetNonTenantSeededIndexes(seeds);
@@ -175,8 +175,15 @@ namespace CsvParser
                     }
                     logger.LogInformation("✓ Cleanup complete\n");
                 }
+                // Update the database, but also clean up any indexes that are being removed from tenant. 
+                // Returns a list of tenants that are being removed, so that we can clean up their relevant containers. 
+                List<string> indexesToCleanUp = await indexer.UpdateDatabaseIndexInformation(indexes, notTenantIndexes, tenantId);
 
-                await indexer.UpdateDatabaseIndexInformation(indexes, notTenantIndexes, tenantId);
+                foreach (string index in indexesToCleanUp)
+                {
+                    await azureUploader.ClearIndexFolderAsync(index);
+                }
+                
                 logger.LogInformation("✓✓✓ All processing complete for {TenantId} ✓✓✓", tenantId);
             }
             catch (Exception ex)

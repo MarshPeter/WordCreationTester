@@ -4,7 +4,6 @@ using CsvParser.Configuration;
 using CsvParser.Data.Models;
 using CsvParser.DTO;
 using CSVParser.Data;
-using CSVParser.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -32,7 +31,8 @@ namespace CsvParser.Services
         }
 
         // Updates or creates database records for Azure Search indexes
-        public async Task<bool> UpdateDatabaseIndexInformation(
+        // Returns a list of any indexes that need to be cleared from the container. 
+        public async Task<List<string>> UpdateDatabaseIndexInformation(
             List<IndexDefinition> createdIndexes,
             List<IndexDefinition> notTenantIndexes,
             string tenantId,
@@ -157,13 +157,13 @@ namespace CsvParser.Services
                     tenantId,
                     string.Join(", ", newlyCreatedIndexes.Any() ? newlyCreatedIndexes : new[] { "None (existing indexes updated)" }));
 
-                return true;
+                return indexResourcesToClear; // We return these so that we can then clean up resources in the container. 
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(ct);
                 _logger.LogError(ex, "Error updating index information for tenant {TenantId}", tenantId);
-                return false;
+                return new List<string>(); // even if the intention is to remove an index, we choose not to just in case. 
             }
         }
 
@@ -173,20 +173,6 @@ namespace CsvParser.Services
             string tenantId,
             CancellationToken ct = default)
         {
-
-            Console.WriteLine($"AIReportRequest type: {typeof(CSVParser.Data.Models.AIReportRequest).Assembly.Location}");
-
-            foreach (var prop in _dbContext.Model.FindEntityType(typeof(CSVParser.Data.Models.AIReportRequest)).GetProperties())
-                Console.WriteLine(prop.Name);
-
-            var entity = _dbContext.Model.FindEntityType(typeof(CSVParser.Data.Models.AIReportRequest));
-            Console.WriteLine($"Full entity type name: {entity.Name}");
-            Console.WriteLine($"Assembly-qualified name: {typeof(CSVParser.Data.Models.AIReportRequest).AssemblyQualifiedName}");
-
-            foreach (var prop in _dbContext.Model.FindEntityType(typeof(AIReportRequest)).GetProperties())
-            {
-                Console.WriteLine($"{prop.Name}     from {prop.DeclaringType.Name}");
-            }
 
             if (notTenantIndexes == null || notTenantIndexes.Count == 0)
                 return new List<string>();

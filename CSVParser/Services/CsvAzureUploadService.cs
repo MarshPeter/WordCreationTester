@@ -47,7 +47,6 @@ namespace CsvParser.Services
         }
 
         // Uploads a file to Azure Blob Storage in the specified index folder
-
         public async Task UploadFileAsync(string filePath, string blobName, string indexName)
         {
             string connectionString = _settings.BlobConnectionString;
