@@ -5,6 +5,8 @@ using WordCreationTester.Configuration;
 using WordCreationTester.DTO;
 using WordCreationTester.Services;
 
+
+// TODO: Update all statuses to actually match what they should be. 
 class Program
 {
     static async Task Main(string[] args)
