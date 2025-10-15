@@ -6,7 +6,6 @@ using WordCreationTester.DTO;
 using WordCreationTester.Services;
 
 
-// TODO: Update all statuses to actually match what they should be. 
 class Program
 {
     static async Task Main(string[] args)
@@ -27,7 +26,7 @@ class Program
         Console.WriteLine("Processor received message.");
         Console.WriteLine($"TenantId = {minimalMessage.TenantId}, AIRequestId = {minimalMessage.AIRequestId}");
 
-        await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 1, "Message received for processing.");
+        await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 2, "Message received for processing.");
 
         using var dbContext = new PayloadDbConnection(config);
 
@@ -37,7 +36,7 @@ class Program
 
         if (requestEntity == null)
         {
-            await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 1, "No payload found in database.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 4, "No payload found in database.");
             Console.WriteLine("No payload found in DB.");
             return;
         }
@@ -63,7 +62,7 @@ class Program
 
         if (index == null)
         {
-            await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 1, "Index was not found attached to request");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(minimalMessage.AIRequestId, 4, "Index was not found attached to request");
             return;
         }
 
@@ -98,7 +97,7 @@ class Program
 
 
         // Run AI
-        await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "AI report generation started.");
+        await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 2, "AI report generation started.");
 
         string reportGenerationSystemMessage = """
             You are an AI assistant that helps people find information. Your job is to create reports from the information you find. And only return the report and no other information.
@@ -123,7 +122,6 @@ class Program
 
         try
         {
-            // TODO: Change searchINdex to be retrieved from the actual name. 
             // Run the AI to generate the initial raw report content
             reportContent = await AIRunner.RunAI(config, reportGenerationSystemMessage, userMessage, index.IndexName, outputFormat: OutputFormat.PlainText);
 
@@ -133,7 +131,7 @@ class Program
             Console.WriteLine("AI report generation failed.");
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
-            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 2, "AI returned no report content.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 4, "AI returned no report content.");
             Console.WriteLine(ex.ToString());
             return;
         }
@@ -182,7 +180,7 @@ class Program
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
-            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "No structured JSON returned by AI.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 4, "No structured JSON returned by AI.");
             return;
         }
 
@@ -190,7 +188,7 @@ class Program
         {
 
             // Generate the Word document from JSON and upload it to Azure Blob Storage
-            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "Generating Word document and uploading to Blob.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 2, "Generating Word document and uploading to Blob.");
 
             string docsDirectory = "./docs";
             Directory.CreateDirectory(docsDirectory);
@@ -205,9 +203,9 @@ class Program
 
             await dbContext.SaveChangesAsync();
 
-            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, $"Report generated successfully and uploaded. URL={blobUrl}");
-
             Console.WriteLine($"Report stored in DB, URL={blobUrl}");
+
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 3, $"Report generated successfully and uploaded. URL={blobUrl}");
         }
         catch (Exception e)
         {
@@ -216,7 +214,7 @@ class Program
             Console.WriteLine("User message was:");
             Console.WriteLine(userMessage);
             Console.WriteLine(e.ToString());
-            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 1, "Word document generation/upload failed.");
+            await PayloadOutcomeUpdater.UpdatePayloadStatus(requestEntity.Id, 4, "Word document generation/upload failed.");
             return;
         }
     }

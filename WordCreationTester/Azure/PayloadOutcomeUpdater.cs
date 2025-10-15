@@ -4,7 +4,6 @@ namespace WordCreationTester.Azure
 {
     public static class PayloadOutcomeUpdater
     {
-        // TODO: Transform the status into the string for logging. 
         public static async Task UpdatePayloadStatus(Guid aiRequestId, int status, string description)
         {
             var config = AIConfig.FromEnvironment();
@@ -25,7 +24,25 @@ namespace WordCreationTester.Azure
 
             await dbContext.SaveChangesAsync();
 
-            Console.WriteLine($"[Status] {status}: {description}");
+            string statusString = "";
+
+            switch (status)
+            {
+                case 1:
+                    statusString = "Queued";
+                    break;
+                case 2:
+                    statusString = "In Progress";
+                    break;
+                case 3:
+                    statusString = "Complete Success";
+                    break;
+                case 4:
+                    statusString = "Failed";
+                    break;
+            }
+
+            Console.WriteLine($"[Status] {statusString}: {description}");
         }
     }
 
